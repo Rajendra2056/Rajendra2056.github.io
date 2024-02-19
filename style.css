@@ -5,9 +5,10 @@ body {
    
 }
 .navbar{
-    max-width: fit-content;
+    border-bottom: 1px solid white;
+    
     display: flex;   
-    flex-direction: flex-end;
+
     
 }
 .navbar img{
@@ -21,12 +22,38 @@ body {
 }
 
 .navbar a{
-    font-size: 1em;
+    
+    font-size: 1.2em;
     font-weight: 1000;
     margin-left: 2em;
     margin-right: 2em;
-    justify-content: space-between;
+    justify-content: space-around;
     
     text-decoration: none;
     color: white;
+}
+.myInfos{
+    margin-top: 2em;
+    
+    display: flex;
+}
+.myImage{
+    width: 35%;
+  
+ 
+    
+}
+.myImage img{
+    border-radius: 50%;
+    height: 25em;
+    width: 25em;
+}
+.textInfo{
+    width: 65%;
+    
+}
+.textInfo h5{
+    color: wheat;
+    font-size: 1.3em;
+    
 }
