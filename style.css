@@ -1,7 +1,8 @@
 body{
-    background-color: green;
+    
 }
 .mainDiv{
+    border: 3px solid red;
     height: 250px;
     background-color: aqua;
 }
