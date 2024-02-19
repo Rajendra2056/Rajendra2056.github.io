@@ -1,5 +1,5 @@
 body {
-    background-color: black;
+    background-color: #100f17;
     
     font-family: "Roboto", sans-serif
    
@@ -9,6 +9,7 @@ body {
     flex-direction: flex-end;
     
 }
+
 .navbar a{
     margin-left: 2em;
     justify-content: space-between;
