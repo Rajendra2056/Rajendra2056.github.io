@@ -38,22 +38,29 @@ body {
     display: flex;
 }
 .myImage{
-    width: 35%;
+    margin-top: 2%;
+    width: 7%;
   
  
     
 }
 .myImage img{
+
     border-radius: 50%;
-    height: 25em;
-    width: 25em;
+    height: 5em;
+    width: 5em;
 }
 .textInfo{
+    border-radius: 25px 25px 25px 25px;
+    background-color: #27262e;
     width: 65%;
     
 }
 .textInfo h5{
+    
+    margin: 5%;
+    word-spacing: 100%;
     color: wheat;
-    font-size: 1.3em;
+    font-size: 1.2em;
     
 }
