@@ -2,18 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
-    <title>FightVerse</title>
-    <link rel="stylesheet" href="./style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Number Game</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body >
-<div class="mainDiv">
-    <h1>Welcome you can expect crazy things only here! just wait for me code for it </h1>
-    <h1>Though its an static site !</h1>
-    <button>click me to do nothing</button>
+<body>
+    <h1>Guess the Number Game</h1>
+    <p>Guess a number between 1 and 100:</p>
+    <input type="text" id="guessField">
+    <input type="submit" value="Submit Guess" id="guessSubmit">
+    <p id="guessMessage"></p>
 
+    <script>
+        // Generate random number between 1 and 100
+const randomNumber = Math.floor(Math.random() * 100) + 1;
 
-</div>
-    
+// Get input field and submit button
+const guessField = document.getElementById('guessField');
+const guessSubmit = document.getElementById('guessSubmit');
+
+// Get message display area
+const guessMessage = document.getElementById('guessMessage');
+
+// Store the number of guesses made
+let guesses = 0;
+
+// Function to check the user's guess
+function checkGuess() {
+    const userGuess = Number(guessField.value);
+    if (userGuess === randomNumber) {
+        guessMessage.textContent = `Congratulations! You guessed the number in ${guesses} guesses!`;
+        guessMessage.style.color = 'green';
+        gameOver();
+    } else if (userGuess < randomNumber) {
+        guessMessage.textContent = 'Too low! Try again.';
+        guessMessage.style.color = 'red';
+    } else {
+        guessMessage.textContent = 'Too high! Try again.';
+        guessMessage.style.color = 'red';
+    }
+    guesses++;
+}
+
+// Function to end the game
+function gameOver() {
+    guessField.disabled = true;
+    guessSubmit.disabled = true;
+}
+
+// Event listener for the submit button
+guessSubmit.addEventListener('click', checkGuess);
+
+    </script>
 </body>
 </html>
