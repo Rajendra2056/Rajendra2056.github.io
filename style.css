@@ -9,9 +9,21 @@ body {
     flex-direction: flex-end;
     
 }
+.navbar img{
+
+    height: 3em;
+    width: 3em;
+}
+.navbar a:hover{
+    color: yellow;
+    
+}
 
 .navbar a{
+    font-size: 1.3em;
+    font-weight: 1000;
     margin-left: 2em;
+    margin-right: 2em;
     justify-content: space-between;
     
     text-decoration: none;
