@@ -6,3 +6,32 @@ body{
 h3{
     color: white;
 }
+.gameSection{
+    background-color: #27262e;
+
+    
+    margin-top: 1.5em;
+    height: 12.5em;
+    
+}
+.gameIcons{
+    display: flex;
+ 
+
+}
+.game{
+  margin-left: 3em;
+    
+    
+    
+}
+.game img{
+    margin: 0.8em;
+    border-radius: 50%;
+    height: 11em;
+    width: 11em;
+}
+.game img:hover{
+    height: 11.7em;
+    width: 11.7em;
+}

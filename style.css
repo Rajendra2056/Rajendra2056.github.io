@@ -4,11 +4,7 @@ body {
     font-family: "Roboto", sans-serif
    
 }
-/* Target the favicon link element and customize width and height */
-link[rel="icon"] {
-    width: 60px;
-    height: 60px;
-}
+
 
 .navbar{
     border-bottom: 1px solid white;
