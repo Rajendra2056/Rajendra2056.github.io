@@ -1,7 +1,7 @@
 body {
     background-color: #100f17;
     
-    font-family: "Roboto", sans-serif
+    font-family: "Inter", sans-serif
    
 }
 
@@ -28,7 +28,7 @@ body {
     
 }
 
-.navbar a{
+.navbar a{font-family: "Inter", sans-serif;
     
     font-size: 1.2em;
     font-weight: 1000;
@@ -37,7 +37,7 @@ body {
     justify-content: space-around;
     
     text-decoration: none;
-    color: white;
+    color: wheat;
 }
 .myInfos{
     margin-top: 2em;
