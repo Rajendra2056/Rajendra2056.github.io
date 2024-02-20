@@ -8,7 +8,7 @@ body {
 
 .navbar{
     height: 2em;
-    border-radius: 25px 25px 25px 25px;
+    border-radius: 0px 0px 95px 95px;
     
     border: 1px solid white;
     
@@ -24,7 +24,7 @@ body {
     width: 3em;
 }
 .navbar a:hover{
-    color: yellow;
+    color: #34eb52;
     
 }
 
