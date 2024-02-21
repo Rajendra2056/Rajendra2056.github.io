@@ -1,0 +1,118 @@
+.resumepage{
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    
+}
+.detailscontainer{
+    display: flex;
+    justify-content: center;
+
+}
+.mydetails{
+    background-color: #2d2c38;
+    border-radius: 20px 20px 20px 20px;
+    margin: 2em;
+    height: 7em;
+    width: 55em;
+}
+.mydetails h3{
+    text-align: center;
+    margin: 0;
+    margin-top: 0.1em;
+
+
+    font-size: 2em;
+    color: wheat;
+}
+.mydetails h4{
+    text-align: center;
+    margin: 0;
+   
+    font-size: 1.5em;
+    color: wheat;
+}
+
+.skillsandeducation{
+    display: flex;
+    justify-content: center;
+   
+    height: 8em;
+    max-height: 8em;
+    
+}
+.education{
+    border-radius: 20px 20px 20px 20px;
+    background-color: #2d2c38;
+    
+    height: 100%;
+    width: 25%;
+    margin-right: 5%;
+}
+.education h4{
+    
+    margin: 0;
+    margin-left: 1em ;
+    font-size: 1.3em;
+    margin-bottom: 0.5em;
+    color: wheat;
+}
+.education h5{
+    
+    font-size: 1em;
+    margin: 0;
+    margin-left: 1em;
+    color: wheat;
+}
+
+.skills{
+    border-radius: 20px 20px 20px 20px;
+    background-color: #2d2c38;
+    width: 62%;
+}
+.skills h4{
+    margin: 0;
+    margin-left: 1em;
+    font-size: 1.3em;
+    color: wheat;
+
+}
+.skills ul{
+    margin: 0;
+}
+.skills li{
+    font-size: 1em;
+    margin: 0;
+    color: wheat;
+
+}
+.Projects{
+    margin-top: 1.5em;
+    margin-left: 2em;
+    background-color: #2d2c38;
+    border-radius: 20px 20px 20px 20px;
+    height: 30em;
+width: 93%;    
+}
+
+.Projects h4{
+    margin: 0;
+
+    font-size: 1.3em;
+    color: wheat;
+
+}
+.Projects h5{
+    font-size: 1em;
+    
+    
+    color: wheat;
+
+}
+.Projects h3{
+
+    
+    font-size: 1.5em;
+    color: wheat;
+
+}
+
+
