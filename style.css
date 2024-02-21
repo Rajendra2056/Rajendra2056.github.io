@@ -7,6 +7,7 @@ body {
 
 
 .navbar{
+    margin-bottom: 2em;
     height: 2em;
     border-radius: 0px 0px 75px 75px;
     
@@ -42,6 +43,7 @@ body {
 }
 .myInfos{
     margin-top: 2em;
+    
     
     display: flex;
     
