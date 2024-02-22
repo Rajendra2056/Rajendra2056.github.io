@@ -1,5 +1,5 @@
 body {
-    background-color: #100f17;
+    background-color: black;
     
     font-family: "Inter", sans-serif
    
@@ -15,6 +15,7 @@ body {
 
 
 .navbar{
+    background-color: #4385f5;
     width: 100%;
     margin-bottom: 2em;
     height: 2em;
@@ -24,6 +25,8 @@ body {
     
     
     display: flex;   
+    
+   
 
   
 
@@ -39,7 +42,9 @@ body {
     
 }
 
-.navbar a{font-family: "Inter", sans-serif;
+.navbar a{
+   
+    font-family: "Inter", sans-serif;
     
     font-size: 1.2em;
     font-weight: 1000;
