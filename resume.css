@@ -150,10 +150,11 @@ width: 93%;
     width: 45%;
 }
 .photoArea img{
+    margin-left: 10%;
     width: 28em;
     border-radius: 25px 25px 25px 25px;
     height: 28em;
-    
+    opacity: 0.8;
 }
 .freebox{
     left: 50%;
@@ -190,7 +191,7 @@ width: 93%;
     
 }
 .ContactMe{
-    margin-top: 5%;
+    margin-top: 8%;
     margin-left: 30%;
    
     border-radius: 25px 25px 25px 25px;
