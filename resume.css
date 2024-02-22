@@ -171,6 +171,24 @@ width: 93%;
     background-color: gold;
 
 }
+.freebox2{
+    top: 90%;
+    left: 49%;
+    position: absolute;
+    height: 1em;
+    width: 1em;
+    background-color:green;
+
+}
+.freebox3{
+    top: 90%;
+    left: 20px;
+    position: absolute;
+    height: 1em;
+    width: 1em;
+    background-color: blue;
+    
+}
 .ContactMe{
     margin-top: 5%;
     margin-left: 30%;
