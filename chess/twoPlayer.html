@@ -51,6 +51,7 @@
 
  
     <div class = "board">
+      <div id = "checkmate"></div>
     <div id="myBoard" 
     style=" margin-left: 300px; margin-top: 50px; height: 500px;width: 500px"></div>
 
@@ -63,42 +64,11 @@ var game = new Chess()
 var $status = $('#status')
 var $fen = $('#fen')
 var $pgn = $('#pgn')
-const startingTime = 5;
-let TimesinSOfplayer2 = startingTime * 60;
-
-let TimeinSOfPlayer1 = startingTime * 60;
 
 
-const timerOfPlayer1 = document.getElementById('clock1');
-const timerOfPlayer2 = document.getElementById('clock2')
 
-setInterval(() => {
-  updateClock()
-  
-}, 1000);
 
-function updateClock (){
 
-  if(game.turn()=='w'){
-  const TimeRemaining = Math.floor(TimeinSOfPlayer1 / 60);
-  let seconds = TimeinSOfPlayer1 % 60;
-  timerOfPlayer1.innerHTML = `  ${TimeRemaining} : ${seconds}  `
-  if(count === 1){ 
-  timerOfPlayer2.innerHTML = ` ${TimeRemaining}: ${seconds} `
-count ++;
-
-}
-  TimeinSOfPlayer1 --;
-}
-else {
-  const TimeRemainingOfPlayer2 =  Math.floor(TimesinSOfplayer2 / 60);
-  let secondsOfPlayer2 = TimesinSOfplayer2 % 60;
-  timerOfPlayer2.innerHTML = `${TimeRemainingOfPlayer2}: ${secondsOfPlayer2} `
-  TimesinSOfplayer2--;
-
-}
-
-}
 
 
 function onDragStart (source, piece, position, orientation) {
@@ -152,6 +122,8 @@ function updateStatus () {
 
   // checkmate?
   if (game.in_checkmate()) {
+    var checkmate = document.getElementById('checkmate')
+    checkmate.innerHTML = "game over"
     status = 'Game over, ' + moveColor + ' is in checkmate.'
   }
 
@@ -185,10 +157,6 @@ var config = {
 board = Chessboard('myBoard', config)
 
 updateStatus()
-
-
-
-
 
 </script>
   </body>
