@@ -30,8 +30,8 @@
     </nav>
     <div class="gameSection">
         <div class="gameIcons">
-            <div  onclick="error()" class="game">
-            <img src="game.jpeg" alt="snakegameicon"> </div>
+            <div  onclick="openHtml()" class="game">
+            <img src="chess.png" alt="snakegameicon"> </div>
             <div class="game">
                 <img src="game.jpeg" alt="snakegameicon"> </div>
                 <div class="game">
@@ -44,9 +44,9 @@
     
 
     <script>
-        function error(){
-            alert("you selected the game but the game is not available yet")
-
+        function openHtml(){
+            window.location.href = './chess/index.html';
+           
         }
     </script>
 </body>
