@@ -15,6 +15,7 @@ body {
 
 
 .navbar{
+    overflow-x: hidden;
     
     width: 100%;
     margin-bottom: 2em;
@@ -32,17 +33,18 @@ body {
 
     
 }
-.navbar img{
 
-    height: 3em;
-    width: 3em;
-}
 .navbar a:hover{
     color: #34eb52;
     
 }
-
+.borderNavbar{
+    border-right: 1px solid white;
+}
 .navbar a{
+   
+    
+    
    
     font-family: "Inter", sans-serif;
     
@@ -54,6 +56,7 @@ body {
     
     text-decoration: none;
     color: white;
+    margin-top: 0;
 }
 .myInfos{
     margin-top: 2em;
