@@ -32,7 +32,6 @@ h3{
     width: 11em;
 }
 .game img:hover{
-    
  border-radius: 50%;
  border: 2px solid rgb(228, 64, 64);
 }
