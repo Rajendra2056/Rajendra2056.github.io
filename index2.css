@@ -7,7 +7,7 @@
     display: flex;
     left: 50%; /* Set left to 50% */
     transform: translateX(-50%);
-    top: 20px;
+    top: 13px;
  }
 
 .navbar a{
