@@ -13,7 +13,9 @@
         <img style="height: 60px;width: 60px; " src="logo.jpeg" alt="logo">
         </div> -->
      
-
+<nav style="display: none;" class="navbarPotrait">
+    <h4>Menu</h4>
+</nav>
         <nav class="navbar">
            <a href="">Home</a>
            
@@ -61,6 +63,19 @@
 @media screen and (orientation: portrait) {
     body{
         overflow-x: hidden!important;
+    }
+    .navbar{
+        display: none!important;
+    }
+    .navbarPotrait{
+        position: absolute;
+        top: 0!important;
+        left: 85vw!important;
+        display: flex!important;
+        flex-direction: horizontal!important;
+        justify-content: flex-end;
+    }.navbarPotrait h4{
+        color: white!important;
     }
     .text-info{
         margin-left: 5vw!important;
