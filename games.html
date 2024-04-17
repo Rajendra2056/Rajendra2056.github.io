@@ -8,22 +8,46 @@
     
 </head>
 <body>
+    <div class="mainPage">
     
      
-        <nav class="navbar">
-            <a href="index.html">Home</a>
+         
+<nav style="display: none;" onclick="openNav()" class="navbarPotrait">
+    <h4>Menu</h4>
+</nav>
+<nav  id="mySidenav" class="sidenav">
+    <a href="index.html">Home</a>
            
-            <a href="">Apps</a>
-            <a href="games.html">Games</a>
-            <a href="fight.html">Animations</a>
-            <a href="">Shop</a>
-            
-            
-           
-            
-         </nav>
+    <a href="">Apps</a>
+    <a href="games.html">Games</a>
+    <a href="fight.html">Animations</a>
+    <a href="">Shop</a>
+    
 
-         <img class="gamePage"  src="banner.jpg" alt="banner">
+</nav>
+        <nav class="navbar">
+           <a href="">Home</a>
+           
+             <a href="">Apps</a>
+             <a href="games.html">Games</a>
+             <a href="fight.html">Animations</a>
+             <a href="">Shop</a>
+             
+          
+           
+        </nav>
+        <div class="landscape"><img  src="banner.jpg" alt="banner"></div>
+        <div style="display: none;" class="potrait"><img  src="bannerPotrait1.jpeg" alt="banner"></div>
+
+        
+      
+      
+       
+        
+       
+
+       
+    </div>
 
          <div class="gameIcons">
             <div onclick="openHtml()" class="game"> <img src="chess.png" alt="chessGame">
@@ -32,6 +56,7 @@
             <div class="game"><img src="snake.png" alt="snakegameicon"><p style="left: 1.8vw;">Snake</p></div>
             <div class="game"><img src="pingpong.png" alt="snakegameicon"><p style="left: 1.8vw;">Tennis</p></div>
             </div>
+        </div>
             
 
          
@@ -60,6 +85,139 @@
         }
     </script>
     <style>
+         .sidenav {
+  height: 100%; /* 100% Full-height */
+  width: 0; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  background-color: #111; /* Black*/
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 60px; /* Place content 60px from the top */
+  transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+}
+
+/* The navigation menu links */
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+ 
+@media screen and (orientation: portrait) {
+    body{
+        overflow-x: hidden!important;
+    }
+   
+    .navbar{
+        display: none!important;
+    }
+    .gamepotraitbanner{
+        height: auto!important;
+        width: 100vw!important;
+        position: absolute!important;
+
+        display: block!important;
+    }
+.gamesBanner{
+    width: 80vw!important;
+}
+ .gamesBanner h3{
+    
+    position: absolute!important;
+    top: 182vh!important;
+    font-size: 1.1rem!important;
+ }
+    .navbarPotrait{
+        position: absolute;
+        top: 0!important;
+        left: 85vw!important;
+        display: flex!important;
+        flex-direction: horizontal!important;
+        justify-content: flex-end;
+    }.navbarPotrait h4{
+        color: white!important;
+    }
+    .text-info{
+        font-weight: 600px!important;
+        margin-left: 5vw!important;
+        margin-right: 5vw!important;
+        top: 84vh!important;
+        font-size: 1.1rem!important;
+    }
+    .landscape{
+        display: none!important;
+
+    }
+    .potrait{
+        display: block!important;
+    }
+    .mainPage img{
+    
+           /* Your portrait mode styles here */
+           height: 100vh!important; /* Adjust height as needed */
+        width: 100vw!important; /* Maintain full width */
+    }
+.buttons{
+    top: 87.5vh!important;
+    display: block!important;
+}
+.gamebuttons{
+   
+    top: 188vh!important;
+    display: block!important;
+
+}
+.btn-1{
+    display: flex;
+    justify-items: center;
+    justify-content: center;
+    align-items: center;
+
+    margin-left:5vw!important ;
+    margin-right: 5vw!important;
+    max-height: 4.5vh!important;
+    width: 90vw!important;
+    
+}
+.btn-1 h3{
+    font-size: 1rem!important;
+    padding: 0.5vh!important;
+    font-weight: 100px!important;
+}
+.btn-2{
+    display: flex;
+    justify-items: center;
+    justify-content: center;
+    align-items: center;
+
+    margin: 0!important;
+    margin-top: 20px!important;
+    margin-left:5vw!important ;
+    margin-right: 5vw!important;
+    max-height: 4.5vh!important;
+    width: 90vw!important;
+ 
+}
+.btn-2 h3{
+    
+    text-align: center;
+    padding: 0.5vh!important;
+    font-size: 1rem!important;
+    font-weight: 100px!important;
+}
+
+}
 
       .gamePage{
         top: 0;
@@ -94,5 +252,21 @@
 
 
     </style>
+    <script>
+        var opened = 0;
+        function openNav() {
+            if(opened == 0){
+      document.getElementById("mySidenav").style.width = "250px";
+    opened =1;}
+    
+      else{
+        document.getElementById("mySidenav").style.width = "0";
+        opened = 0;
+    
+      }
+    }
+    
+    
+    </script>
 </body>
 </html>
