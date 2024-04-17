@@ -25,7 +25,10 @@
           
            
         </nav>
-        <img  src="banner.jpg" alt="banner">
+        <div class="landscape"><img  src="banner.jpg" alt="banner"></div>
+        <div style="display: none;" class="potrait"><img  src="potrait2.jpg" alt="banner"></div>
+
+        
         <h3 class="text-info">Welcome! Site for Entertainment.</h3>
         
         <div class="buttons">
@@ -56,11 +59,61 @@
 
  
 @media screen and (orientation: portrait) {
-    .mainPage img{
-           /* Your portrait mode styles here */
-           height: auto; /* Adjust height as needed */
-        width: 100%; /* Maintain full width */
+    .text-info{
+        margin-left: 5vw!important;
+        margin-right: 5vw!important;
+        top: 75vh!important;
+        font-size: 1rem!important;
     }
+    .landscape{
+        display: none!important;
+
+    }
+    .potrait{
+        display: block!important;
+    }
+    .mainPage img{
+    
+           /* Your portrait mode styles here */
+           height: 100vh!important; /* Adjust height as needed */
+        width: 100%!important; /* Maintain full width */
+    }
+.buttons{
+    top: 80vh!important;
+    display: block!important;
+}
+.btn-1{
+    margin-left:5vw!important ;
+    margin-right: 5vw!important;
+    height: 4.5vh!important;
+    width: 90vw!important;
+    
+}
+.btn-1 h3{
+    font-size: 1rem!important;
+    margin: 4px!important;
+    font-weight: 100px!important;
+}
+.btn-2{
+
+    margin: 0!important;
+    margin-top: 30px!important;
+    margin-left:5vw!important ;
+    margin-right: 5vw!important;
+    height: 4.5vh!important;
+    width: 90vw!important;
+ 
+}
+.btn-2 h3{
+    margin: 4px!important;
+    font-size: 1rem!important;
+    font-weight: 100px!important;
+}
+
+}
+
+@media screen and (orientation: landscape){
+
 
 }
 
