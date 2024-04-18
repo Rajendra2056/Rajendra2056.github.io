@@ -7,17 +7,35 @@
     <title>FightVerse</title>
 </head>
 <body>
+    <div class="mainPage">
    
-    <nav class="navbar">
+    <nav style="display: none;" onclick="openNav()" class="navbarPotrait">
+        <h4>Menu</h4>
+    </nav>
+    <nav  id="mySidenav" class="sidenav">
         <a href="index.html">Home</a>
-           
+               
         <a href="">Apps</a>
         <a href="games.html">Games</a>
         <a href="fight.html">Animations</a>
         <a href="">Shop</a>
         
-</nav>
-<img class="mainPage"  src="banner.jpg" alt="banner">
+    
+    </nav>
+            <nav class="navbar">
+               <a href="">Home</a>
+               
+                 <a href="">Apps</a>
+                 <a href="games.html">Games</a>
+                 <a href="fight.html">Animations</a>
+                 <a href="">Shop</a>
+                 
+              
+               
+            </nav>
+            <div class="landscape"><img  src="banner.jpg" alt="banner"></div>
+            <div style="display: none;" class="potrait"><img  src="bannerPotrait1.jpeg" alt="banner"></div>
+
 
     <div class="story">
         <h4>
@@ -34,18 +52,114 @@
     
 
     </div>
+</div>
 </body>
     
 
 <style>
 
-      .mainPage{
-        
-        position: absolute;
-        top: 0;
-        height: 100vh;
-        width: 100vw;
+
+         .sidenav {
+  height: 100%; /* 100% Full-height */
+  width: 0; /* 0 width - change this with JavaScript */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  background-color: #111; /* Black*/
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 60px; /* Place content 60px from the top */
+  transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+}
+
+/* The navigation menu links */
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+ 
+@media screen and (orientation: portrait) {
+    body{
+        overflow-x: hidden!important;
     }
+
+
+
+
+   
+    .navbar{
+        display: none!important;
+    }
+   
+    .navbarPotrait{
+        z-index: 9999;
+        position: absolute;
+        top: 0!important;
+        left: 85vw!important;
+        display: flex!important;
+        flex-direction: horizontal!important;
+        justify-content: flex-end;
+    }.navbarPotrait h4{
+        color: white!important;
+    }
+    
+    .landscape{
+        display: none!important;
+
+    }
+    .potrait{
+        display: block!important;
+    }
+    .mainPage img{
+    
+           /* Your portrait mode styles here */
+           height: 100vh!important; /* Adjust height as needed */
+        width: 100vw!important; /* Maintain full width */
+    }
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     .story h4{
         margin: 0;
         font-size: 3vh;
@@ -62,5 +176,21 @@
     }
 
 </style>
+<script>
+    var opened = 0;
+    function openNav() {
+        if(opened == 0){
+  document.getElementById("mySidenav").style.width = "250px";
+opened =1;}
+
+  else{
+    document.getElementById("mySidenav").style.width = "0";
+    opened = 0;
+
+  }
+}
+
+
+</script>
 </body>
 </html>
