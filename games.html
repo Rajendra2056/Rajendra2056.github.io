@@ -56,26 +56,11 @@
             <div class="game"><img src="snake.png" alt="snakegameicon"><p style="left: 1.8vw;">Snake</p></div>
             <div class="game"><img src="pingpong.png" alt="snakegameicon"><p style="left: 1.8vw;">Tennis</p></div>
             </div>
-        </div>
+    </div>
             
 
          
-         
-      
-
-<!--     
-    <div class="gameSection">
-        <div class="gameIcons">
-            <div  onclick="openHtml()" class="game">
-            <img src="chess.png" alt="chessGame"> </div>
-            <div class="game">
-                <img src="game.jpeg" alt="snakegameicon"> </div>
-               
-                    
         
-
-
-    </div> -->
     
 
     <script>
@@ -85,6 +70,11 @@
         }
     </script>
     <style>
+        .mainPage{
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
          .sidenav {
   height: 100%; /* 100% Full-height */
   width: 0; /* 0 width - change this with JavaScript */
@@ -118,26 +108,20 @@
     body{
         overflow-x: hidden!important;
     }
+
+
+
+    .gameIcons img{ 
+        margin-left: 1vw;
+        height: 10vh!important;
+        width: 12vw!important;
+    }
+
    
     .navbar{
         display: none!important;
     }
-    .gamepotraitbanner{
-        height: auto!important;
-        width: 100vw!important;
-        position: absolute!important;
-
-        display: block!important;
-    }
-.gamesBanner{
-    width: 80vw!important;
-}
- .gamesBanner h3{
-    
-    position: absolute!important;
-    top: 182vh!important;
-    font-size: 1.1rem!important;
- }
+   
     .navbarPotrait{
         position: absolute;
         top: 0!important;
@@ -148,13 +132,7 @@
     }.navbarPotrait h4{
         color: white!important;
     }
-    .text-info{
-        font-weight: 600px!important;
-        margin-left: 5vw!important;
-        margin-right: 5vw!important;
-        top: 84vh!important;
-        font-size: 1.1rem!important;
-    }
+    
     .landscape{
         display: none!important;
 
@@ -168,59 +146,19 @@
            height: 100vh!important; /* Adjust height as needed */
         width: 100vw!important; /* Maintain full width */
     }
-.buttons{
-    top: 87.5vh!important;
-    display: block!important;
-}
-.gamebuttons{
-   
-    top: 188vh!important;
-    display: block!important;
 
-}
-.btn-1{
-    display: flex;
-    justify-items: center;
-    justify-content: center;
-    align-items: center;
 
-    margin-left:5vw!important ;
-    margin-right: 5vw!important;
-    max-height: 4.5vh!important;
-    width: 90vw!important;
-    
-}
-.btn-1 h3{
-    font-size: 1rem!important;
-    padding: 0.5vh!important;
-    font-weight: 100px!important;
-}
-.btn-2{
-    display: flex;
-    justify-items: center;
-    justify-content: center;
-    align-items: center;
 
-    margin: 0!important;
-    margin-top: 20px!important;
-    margin-left:5vw!important ;
-    margin-right: 5vw!important;
-    max-height: 4.5vh!important;
-    width: 90vw!important;
- 
-}
-.btn-2 h3{
-    
-    text-align: center;
-    padding: 0.5vh!important;
-    font-size: 1rem!important;
-    font-weight: 100px!important;
-}
+
+
+
+
 
 }
 
       .gamePage{
         top: 0;
+        left: 0;
             position: absolute;
         height: 100vh;
         width: 100vw;
