@@ -53,7 +53,7 @@
         }
 
         .qr-code {
-            margin-top: 20px;
+            margin: 80px;
         }
     </style>
 </head>
@@ -66,27 +66,24 @@
         <div class="qr-code" id="qr-code"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <!-- New QR Code Generation Library -->
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script>
         function generateQRCode() {
-            const text = document.getElementById('text-input').value;
+            const text = document.getElementById('text-input').value.trim();  // Get and trim input
             const qrCodeContainer = document.getElementById('qr-code');
-            
+
+            // Check if the input is empty
             if (text === "") {
-                alert("Please enter text or URL to generate a QR code.");
+                alert("Please enter some text or URL to generate a QR code.");
                 return;
             }
-            
+
             // Clear previous QR code
             qrCodeContainer.innerHTML = '';
 
-            // Generate and display QR code
-            QRCode.toCanvas(qrCodeContainer, text, function (error) {
-                if (error) {
-                    console.error(error);
-                    alert("There was an error generating the QR code.");
-                }
-            });
+            // Generate the QR code
+            new QRCode(qrCodeContainer, text);
         }
     </script>
 

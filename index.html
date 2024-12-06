@@ -96,8 +96,17 @@ border: none;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: #F5F5F5; /* Ivory White */
+    transition: transform 0.3s ease;
 }
-
+.card-img-top {
+    width: 100%; /* Ensures the image takes full width of the container */
+    height: 200px; /* Fixed height for uniformity */
+    object-fit: cover; /* Ensures the image fills the container without distortion */
+    border-radius: 10px 10px 0 0; /* Rounds the top corners */
+}
+.card:hover {
+    transform: scale(1.05); /* Slightly enlarge the card */
+}
 .card-body {
     text-align: center;
 }
@@ -213,10 +222,12 @@ border: none;
                 </div>
                 <div class="col-md-3">
                     <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Game 2">
+                        <img src="snake.jpg" class="card-img-top" alt="Game 2">
                         <div class="card-body">
-                            <h5 class="card-title">Game 2</h5>
-                            <button class="btn btn-primary">Play</button>
+                            <h5 class="card-title">Snake</h5>
+                            <a href="snake.html">
+                                <button class="btn btn-primary">Play</button>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -224,8 +235,10 @@ border: none;
                     <div class="card">
                         <img src="https://via.placeholder.com/150" class="card-img-top" alt="Game 3">
                         <div class="card-body">
-                            <h5 class="card-title">Game 3</h5>
-                            <button class="btn btn-primary">Play</button>
+                            <h5 class="card-title">Arrow</h5>
+                            <a href="arrow.html">
+                                <button class="btn btn-primary">Play</button>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -233,8 +246,10 @@ border: none;
                     <div class="card">
                         <img src="https://via.placeholder.com/150" class="card-img-top" alt="Game 4">
                         <div class="card-body">
-                            <h5 class="card-title">Game 4</h5>
-                            <button class="btn btn-primary">Play</button>
+                            <h5 class="card-title">Path finder</h5>
+                            <a href="pathfinder.html">
+                                <button class="btn btn-primary">Play</button>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -246,7 +261,7 @@ border: none;
             <div class="row g-4">
                 <div class="col-md-3">
                     <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Game 1">
+                        <img src="qrcode.jpg" class="card-img-top" alt="Game 1">
                         <div class="card-body">
                             <h5 class="card-title">Qr code Generator</h5>
                             <a href="qrcodegenerator.html">
@@ -257,10 +272,12 @@ border: none;
                 </div>
                 <div class="col-md-3">
                     <div class="card">
-                        <img src="https://via.placeholder.com/150" class="card-img-top" alt="Game 2">
+                        <img src="stopwatch.jpg" class="card-img-top" alt="Game 2">
                         <div class="card-body">
-                            <h5 class="card-title">App 2</h5>
-                            <button class="btn btn-primary">Open</button>
+                            <h5 class="card-title">Stop watch</h5>
+                            <a href="stopwatch.html">
+                                <button class="btn btn-primary">Open</button>
+                            </a>
                         </div>
                     </div>
                 </div>
