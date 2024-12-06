@@ -12,7 +12,8 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
     <style>
-       body {
+
+body {
     font-family: 'Montserrat', sans-serif;
     background-color: #F5F5F5; /* Ivory White background */
     color: #1A2238; /* Deep Sapphire Blue text */
@@ -22,6 +23,10 @@
 .navbar {
     background-color: #273A5D; /* Midnight Navy */
     transition: all 0.3s ease;
+}
+.navbar-toggler {
+display: block !important; /* Make sure it is always displayed */
+border: none;
 }
 
 .navbar-brand, .nav-link {
@@ -123,6 +128,14 @@
     background: linear-gradient(135deg, #1A2238 0%, #273A5D 100%);
 }
 
+
+
+
+
+
+
+
+     
     </style>
 </head>
 <body>
@@ -268,3 +281,129 @@ toggleSidebar.addEventListener('click', function () {
     <link rel="icon" href="R.ico" type="image/x-icon">
     <title>R-Verse</title>
     -->
+
+    <!-- body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f8f9fa;
+    }
+/* Navbar styling */
+.navbar {
+background-color: #2c3e50;
+transition: all 0.3s ease;
+}
+
+.navbar-brand, .nav-link {
+color: white !important;
+font-family: 'Poppins', sans-serif;
+}
+
+.navbar-toggler-icon {
+background-color: white;
+}
+.navbar.show {
+margin-left: 250px; /* Add margin to navbar when sidebar is visible */
+}
+
+/* Toggle icon on smaller screens */
+.navbar-toggler {
+display: block !important; /* Make sure it is always displayed */
+border: none;
+}
+
+
+
+
+    .sidebar {
+background-color: #34495e;
+color: white;
+width: 250px;
+position: fixed;
+top: 0;
+left: -250px;
+height: 100%;
+padding-top: 20px;
+transition: all 0.3s;
+}
+
+    .sidebar.show {
+        left: 0;
+    }
+
+    .sidebar .logo-section {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .sidebar a {
+        color: white;
+        text-decoration: none;
+        padding: 10px 15px;
+        display: block;
+        border-bottom: 1px solid #2c3e50;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .sidebar a:hover {
+        background-color: #1abc9c;
+    }
+
+    /* Content styling */
+.content {
+margin-left: 0;
+padding: 30px;
+transition: margin-left 0.3s;
+}
+
+.content.show {
+margin-left: 250px; /* Add this to shift content when sidebar is visible */
+}
+
+    .header-section {
+        background-color: #2980b9;
+        color: white;
+        padding: 60px 20px;
+        text-align: center;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: white;
+    }
+
+    .card-body {
+        text-align: center;
+    }
+
+    .card-title {
+        color: #2c3e50;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+        border: none;
+        padding: 10px 20px;
+        width: 100%;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .btn-primary:hover {
+        background-color: #1d7ab9;
+    }
+
+    .container-fluid {
+        margin-top: 100px;
+    }
+
+    .navbar-toggler {
+display: block !important; /* Make sure it is always displayed */
+border: none;
+}
+
+    .logo-section img {
+        width: 80%;
+        margin-bottom: 15px;
+    } -->
