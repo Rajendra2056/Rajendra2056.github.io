@@ -32,16 +32,16 @@
         }
 
         .sidebar {
-            background-color: #34495e;
-            color: white;
-            width: 250px;
-            position: fixed;
-            top: 0;
-            left: -250px;
-            height: 100%;
-            padding-top: 20px;
-            transition: all 0.3s;
-        }
+    background-color: #34495e;
+    color: white;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: -250px;
+    height: 100%;
+    padding-top: 20px;
+    transition: all 0.3s;
+}
 
         .sidebar.show {
             left: 0;
@@ -65,11 +65,16 @@
             background-color: #1abc9c;
         }
 
-        .content {
-            margin-left: 0;
-            padding: 30px;
-            transition: margin-left 0.3s;
-        }
+        /* Content styling */
+.content {
+    margin-left: 0;
+    padding: 30px;
+    transition: margin-left 0.3s;
+}
+
+.content.show {
+    margin-left: 250px; /* Add this to shift content when sidebar is visible */
+}
 
         .header-section {
             background-color: #2980b9;
