@@ -10,10 +10,11 @@
         /* Custom Styles */
         body {
             font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa; /* Light Gray background */
         }
 
         .navbar {
-            background-color: #004C8C; /* Dark Blue */
+            background-color: #2c3e50; /* Navy Blue */
         }
 
         .navbar-brand, .nav-link {
@@ -25,7 +26,7 @@
         }
 
         .sidebar {
-            background-color: #2C3E50; /* Darker Blue */
+            background-color: #34495e; /* Dark Grayish Blue */
             color: white;
             width: 250px;
             position: fixed;
@@ -33,6 +34,7 @@
             left: 0;
             height: 100%;
             padding-top: 20px;
+            transition: all 0.3s;
         }
 
         .sidebar a {
@@ -40,10 +42,11 @@
             text-decoration: none;
             padding: 10px 15px;
             display: block;
+            border-bottom: 1px solid #2c3e50;
         }
 
         .sidebar a:hover {
-            background-color: #34495E; /* Lighter Blue */
+            background-color: #1abc9c; /* Teal */
         }
 
         .content {
@@ -52,16 +55,18 @@
         }
 
         .header-section {
-            background-color: #3498DB; /* Light Blue */
+            background-color: #2980b9; /* Blue */
             color: white;
-            padding: 50px 20px;
+            padding: 60px 20px;
             text-align: center;
             border-radius: 8px;
+            margin-bottom: 30px;
         }
 
         .card {
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: white;
         }
 
         .card-body {
@@ -69,11 +74,11 @@
         }
 
         .card-title {
-            color: #2C3E50; /* Darker Text */
+            color: #2c3e50; /* Darker Text */
         }
 
         .btn-primary {
-            background-color: #2980B9; /* Blue */
+            background-color: #3498db; /* Blue */
             border: none;
             padding: 10px 20px;
             width: 100%;
@@ -82,11 +87,16 @@
         }
 
         .btn-primary:hover {
-            background-color: #1A67A4; /* Darker Blue */
+            background-color: #1d7ab9; /* Darker Blue */
         }
 
         .container-fluid {
             margin-top: 100px;
+        }
+
+        /* Sidebar toggle */
+        .sidebar.d-none {
+            display: none;
         }
     </style>
 </head>
@@ -163,7 +173,7 @@
                         <img src="https://via.placeholder.com/150" class="card-img-top" alt="Game 1">
                         <div class="card-body">
                             <h5 class="card-title">Game 1</h5>
-                            <button class="btn btn-primary">Install</button>
+                            <button class="btn btn-primary">Play</button>
                         </div>
                     </div>
                 </div>
@@ -172,7 +182,7 @@
                         <img src="https://via.placeholder.com/150" class="card-img-top" alt="Game 2">
                         <div class="card-body">
                             <h5 class="card-title">Game 2</h5>
-                            <button class="btn btn-primary">Install</button>
+                            <button class="btn btn-primary">Play</button>
                         </div>
                     </div>
                 </div>
@@ -181,7 +191,7 @@
                         <img src="https://via.placeholder.com/150" class="card-img-top" alt="Game 3">
                         <div class="card-body">
                             <h5 class="card-title">Game 3</h5>
-                            <button class="btn btn-primary">Install</button>
+                            <button class="btn btn-primary">Play</button>
                         </div>
                     </div>
                 </div>
@@ -190,7 +200,7 @@
                         <img src="https://via.placeholder.com/150" class="card-img-top" alt="Game 4">
                         <div class="card-body">
                             <h5 class="card-title">Game 4</h5>
-                            <button class="btn btn-primary">Install</button>
+                            <button class="btn btn-primary">Play</button>
                         </div>
                     </div>
                 </div>
@@ -216,6 +226,7 @@
 
 </body>
 </html>
+
 
 
 
