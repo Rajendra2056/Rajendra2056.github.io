@@ -39,6 +39,16 @@
             height: 100%;
             padding-top: 20px;
             transition: all 0.3s;
+            display: none;
+        }
+
+        .sidebar.show {
+            display: block;
+        }
+
+        .sidebar .logo-section {
+            padding: 20px;
+            text-align: center;
         }
 
         .sidebar a {
@@ -107,6 +117,12 @@
         .navbar-toggler {
             border: none;
         }
+
+        .logo-section img {
+            width: 80%;
+            margin-bottom: 15px;
+        }
+
     </style>
 </head>
 <body>
@@ -142,6 +158,10 @@
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
+        <div class="logo-section">
+            <img src="https://via.placeholder.com/150" alt="Logo"> <!-- Placeholder for Logo -->
+            <h3>R-verse</h3>
+        </div>
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link" href="#">🏠 Home</a>
@@ -225,13 +245,13 @@
         const content = document.getElementById('content');
 
         toggleSidebar.addEventListener('click', function () {
-            sidebar.classList.toggle('d-none');
-            content.style.marginLeft = sidebar.classList.contains('d-none') ? '0' : '250px';
+            sidebar.classList.toggle('show');
+            content.style.marginLeft = sidebar.classList.contains('show') ? '250px' : '0';
         });
     </script>
-
 </body>
 </html>
+
 
 
 
