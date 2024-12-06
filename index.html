@@ -10,461 +10,132 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">GameAppStore</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#games">Games</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#apps">Apps</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                </ul>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="bg-dark text-white flex-column p-3 vh-100">
+            <h2 class="text-center mb-4">GameAppStore</h2>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-3">
+                    <a href="#games" class="nav-link text-white">🎮 Games</a>
+                </li>
+                <li class="nav-item mb-3">
+                    <a href="#apps" class="nav-link text-white">📱 Apps</a>
+                </li>
+                <li class="nav-item mb-3">
+                    <a href="#about" class="nav-link text-white">ℹ️ About</a>
+                </li>
+            </ul>
+            <div class="mt-auto text-center">
+                <p>&copy; 2024 GameAppStore</p>
             </div>
-        </div>
-    </nav>
+        </nav>
 
-    <!-- Hero Section -->
-    <div class="bg-primary text-white text-center py-5">
-        <div class="container">
-            <h1>Welcome to GameAppStore</h1>
-            <p class="lead">Discover the best games and apps all in one place!</p>
-            <a href="#games" class="btn btn-light btn-lg">Explore Now</a>
+        <!-- Main Content -->
+        <div class="flex-grow-1">
+            <!-- Hero Section -->
+            <div class="bg-primary text-white text-center py-5">
+                <h1>Welcome to GameAppStore</h1>
+                <p class="lead">Discover the best games and apps all in one place!</p>
+                <a href="#games" class="btn btn-light btn-lg">Explore Now</a>
+            </div>
+
+            <!-- Games Section -->
+            <section id="games" class="py-5">
+                <div class="container">
+                    <h2 class="text-center mb-4">Top Games</h2>
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        <div class="col">
+                            <div class="card h-100">
+                                <img src="game1.jpg" class="card-img-top" alt="Game 1">
+                                <div class="card-body">
+                                    <h5 class="card-title">Adventure Quest</h5>
+                                    <p class="card-text">Dive into an epic world of adventures and quests.</p>
+                                    <a href="#" class="btn btn-primary w-100">Play Now</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card h-100">
+                                <img src="game2.jpg" class="card-img-top" alt="Game 2">
+                                <div class="card-body">
+                                    <h5 class="card-title">Brain Challenge</h5>
+                                    <p class="card-text">Test your wits with challenging puzzles.</p>
+                                    <a href="#" class="btn btn-primary w-100">Play Now</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card h-100">
+                                <img src="game3.jpg" class="card-img-top" alt="Game 3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Speed Racer</h5>
+                                    <p class="card-text">Feel the thrill of high-speed racing.</p>
+                                    <a href="#" class="btn btn-primary w-100">Play Now</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Apps Section -->
+            <section id="apps" class="py-5 bg-light">
+                <div class="container">
+                    <h2 class="text-center mb-4">Top Apps</h2>
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        <div class="col">
+                            <div class="card h-100">
+                                <img src="app1.jpg" class="card-img-top" alt="App 1">
+                                <div class="card-body">
+                                    <h5 class="card-title">Productivity Master</h5>
+                                    <p class="card-text">Stay organized with this powerful app.</p>
+                                    <a href="#" class="btn btn-success w-100">Download</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card h-100">
+                                <img src="app2.jpg" class="card-img-top" alt="App 2">
+                                <div class="card-body">
+                                    <h5 class="card-title">Fitness Pro</h5>
+                                    <p class="card-text">Achieve your fitness goals with ease.</p>
+                                    <a href="#" class="btn btn-success w-100">Download</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card h-100">
+                                <img src="app3.jpg" class="card-img-top" alt="App 3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Social Connect</h5>
+                                    <p class="card-text">Connect with friends and family seamlessly.</p>
+                                    <a href="#" class="btn btn-success w-100">Download</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Section -->
+            <section id="about" class="py-5">
+                <div class="container">
+                    <h2 class="text-center mb-4">About Us</h2>
+                    <p class="text-center">
+                        GameAppStore is your one-stop solution for discovering the latest games and apps. We aim to bring fun and productivity to your fingertips.
+                    </p>
+                </div>
+            </section>
         </div>
     </div>
-
-    <!-- Games Section -->
-    <section id="games" class="py-5">
-        <div class="container">
-            <h2 class="text-center mb-4">Top Games</h2>
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-                <div class="col">
-                    <div class="card h-100">
-                        <img src="game1.jpg" class="card-img-top" alt="Game 1">
-                        <div class="card-body">
-                            <h5 class="card-title">Adventure Quest</h5>
-                            <p class="card-text">Dive into an epic world of adventures and quests.</p>
-                            <a href="#" class="btn btn-primary w-100">Play Now</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card h-100">
-                        <img src="game2.jpg" class="card-img-top" alt="Game 2">
-                        <div class="card-body">
-                            <h5 class="card-title">Brain Challenge</h5>
-                            <p class="card-text">Test your wits with challenging puzzles.</p>
-                            <a href="#" class="btn btn-primary w-100">Play Now</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card h-100">
-                        <img src="game3.jpg" class="card-img-top" alt="Game 3">
-                        <div class="card-body">
-                            <h5 class="card-title">Speed Racer</h5>
-                            <p class="card-text">Feel the thrill of high-speed racing.</p>
-                            <a href="#" class="btn btn-primary w-100">Play Now</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Apps Section -->
-    <section id="apps" class="py-5 bg-light">
-        <div class="container">
-            <h2 class="text-center mb-4">Top Apps</h2>
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-                <div class="col">
-                    <div class="card h-100">
-                        <img src="app1.jpg" class="card-img-top" alt="App 1">
-                        <div class="card-body">
-                            <h5 class="card-title">Productivity Master</h5>
-                            <p class="card-text">Stay organized with this powerful app.</p>
-                            <a href="#" class="btn btn-success w-100">Download</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card h-100">
-                        <img src="app2.jpg" class="card-img-top" alt="App 2">
-                        <div class="card-body">
-                            <h5 class="card-title">Fitness Pro</h5>
-                            <p class="card-text">Achieve your fitness goals with ease.</p>
-                            <a href="#" class="btn btn-success w-100">Download</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card h-100">
-                        <img src="app3.jpg" class="card-img-top" alt="App 3">
-                        <div class="card-body">
-                            <h5 class="card-title">Social Connect</h5>
-                            <p class="card-text">Connect with friends and family seamlessly.</p>
-                            <a href="#" class="btn btn-success w-100">Download</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="py-5">
-        <div class="container">
-            <h2 class="text-center mb-4">About Us</h2>
-            <p class="text-center">
-                GameAppStore is your one-stop solution for discovering the latest games and apps. We aim to bring fun and productivity to your fingertips.
-            </p>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3">
-        <p>&copy; 2024 GameAppStore. All Rights Reserved.</p>
-    </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- 
     <link rel="icon" href="R.ico" type="image/x-icon">
     <title>R-Verse</title>
-    <link rel="stylesheet" href = './index2.css'>
-</head>
-<body>
-    <div class="mainPage">
-        
-       
-       
-        
-     
-<nav style="display: none;" onclick="openNav()" class="navbarPotrait">
-    <h4>Menu</h4>
-</nav>
-<nav  id="mySidenav" class="sidenav">
-  
-    <a href="">Home</a>
-           
-    <a href="Apps.html">Apps</a>
-    <a href="games.html">Games</a>
-    <a href="fight.html">Animations</a>
-    <a href="">Shop</a>
-    
-
-</nav>
-        <nav class="navbar">
-           <a href="">Home</a>
-           
-             <a href="Apps.html">Apps</a>
-             <a href="games.html">Games</a>
-             <a href="fight.html">Animations</a>
-             <a href="">Shop</a>
-             
-          
-           
-        </nav>
-        <div class="landscape"><img  src="banner.jpg" alt="banner"></div>
-        <div style="display: none;" class="potrait"><img src="bannerPotrait1.jpeg" alt="banner"></div>
-
-        
-        <h3 class="text-info">Welcome! Site for Entertainment.</h3>
-        
-        <div class="buttons">
-           
-           <div class="btn-1"><h3>About me</h3></div>
-            <div class="btn-2"><h3>Store</h3></div>
-
-        </div>
-        <div style="display: none;" class="gamepotraitbanner">
-            <img  src="gamepotraited.webp" alt="banner">
-       
-
-        </div>
-        <div class="gamesBanner"> <img  src="game.jpg" alt="banner">
-            <h3>Play High Quality Games</h3></div>
-            <div class="gamebuttons">
-           
-                <div class="btn-1"><h3>Play</h3></div>
-                 <div class="btn-2"><h3>Explore</h3></div>
-     
-             </div>
-       
-
-       
-    </div>
-
- 
-    
-</body>
-</html>
-
-<style>
-    .sidenav {
-  height: 100%; /* 100% Full-height */
-  width: 0; /* 0 width - change this with JavaScript */
-  position: fixed; /* Stay in place */
-  z-index: 1; /* Stay on top */
-  top: 0; /* Stay at the top */
-  left: 0;
-  background-color: #111; /* Black*/
-  overflow-x: hidden; /* Disable horizontal scroll */
-  padding-top: 60px; /* Place content 60px from the top */
-  transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
-}
-
-/* The navigation menu links */
-.sidenav a {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  padding: 8px 8px 8px 32px;
-  text-decoration: none;
-  font-size: 25px;
-  color: #818181;
-  display: block;
-  transition: 0.3s;
-}
-
-/* When you mouse over the navigation links, change their color */
-.sidenav a:hover {
-  color: #f1f1f1;
-}
-
- 
-@media screen and (orientation: portrait) {
-    body{
-        overflow-x: hidden!important;
-    }
-   
-    .navbar{
-        display: none!important;
-    }
-    .gamepotraitbanner{
-        height: auto!important;
-        width: 100vw!important;
-        position: absolute!important;
-
-        display: block!important;
-    }
-.gamesBanner{
-    width: 80vw!important;
-}
- .gamesBanner h3{
-    
-    position: absolute!important;
-    top: 182vh!important;
-    font-size: 1.1rem!important;
- }
-    .navbarPotrait{
-        position: absolute;
-        top: 0!important;
-        left: 85vw!important;
-        display: flex!important;
-        flex-direction: horizontal!important;
-        justify-content: flex-end;
-    }.navbarPotrait h4{
-        color: white!important;
-    }
-    .text-info{
-        font-weight: 600px!important;
-        margin-left: 5vw!important;
-        margin-right: 5vw!important;
-        top: 84vh!important;
-        font-size: 1.1rem!important;
-    }
-    .landscape{
-        display: none!important;
-
-    }
-    .potrait{
-        display: block!important;
-    }
-    .mainPage img{
-    
-           /* Your portrait mode styles here */
-           height: 100vh!important; /* Adjust height as needed */
-        width: 100vw!important; /* Maintain full width */
-    }
-.buttons{
-    top: 87.5vh!important;
-    display: block!important;
-}
-.gamebuttons{
-   
-    top: 188vh!important;
-    display: block!important;
-
-}
-.btn-1{
-    display: flex;
-    justify-items: center;
-    justify-content: center;
-    align-items: center;
-
-    margin-left:5vw!important ;
-    margin-right: 5vw!important;
-    max-height: 4.5vh!important;
-    width: 90vw!important;
-    
-}
-.btn-1 h3{
-    font-size: 1rem!important;
-    padding: 0.5vh!important;
-    font-weight: 100px!important;
-}
-.btn-2{
-    display: flex;
-    justify-items: center;
-    justify-content: center;
-    align-items: center;
-
-    margin: 0!important;
-    margin-top: 20px!important;
-    margin-left:5vw!important ;
-    margin-right: 5vw!important;
-    max-height: 4.5vh!important;
-    width: 90vw!important;
- 
-}
-.btn-2 h3{
-    
-    text-align: center;
-    padding: 0.5vh!important;
-    font-size: 1rem!important;
-    font-weight: 100px!important;
-}
-
-}
-
-@media screen and (orientation: landscape){
-
-
-}
-
-
-.mainPage{
-    left: 0;
-    position: absolute;
-    top: 0;
-}
-    .mainPage img{
-        margin: 0;
-        top: 0;
-        height: 100vh;
-        width: 100vw;
-    }
-
-
-  
-
-    .text-info{
-        margin: 0;
-        font-size: 1.5rem;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-
-        color: #ffffff;
-        font-weight: 700;
-     
-        position: absolute;
-        top: 79vh;
-    }
-    .buttons{
-        display: flex;
-        position: absolute;
-        top: 85vh;
-    }
-    .gamebuttons{
-        display: flex;
-        position: absolute;
-        top: 190vh;
-        left: 50%; /* Set left to 50% */
-    transform: translateX(-50%);
-
-    }
-
-    .btn-1{
-        display: flex;
-    justify-items: center;
-    justify-content: center;
-    align-items: center;
-
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        text-align: center;
-        height: 50px;
-        width: 200px;
-     
-        background-color: #222222;
-        color: #ffffff;
-        border-radius: 3px 3px 3px 3px;
-        font-size: 1.5rem;
-     
-    }
-    .btn-1 h3{
-        margin: 5px;
-        font-weight: 600px;
-    }
- 
-    .btn-2{
-        display: flex;
-    justify-items: center;
-    justify-content: center;
-    align-items: center;
-
-        margin-left: 20px;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        text-align: center;
-        height: 50px;
-        width: 200px;
-      
-        background-color: #ffffff;
-        color: #222222;
-        border-radius: 3px 3px 3px 3px;
-        font-size: 1.5rem;
-    }
-    .btn-2 h3{
-        margin: 5px;
-        font-weight: 600px;
-    }
-
-  
-    .gamesBanner h3{
-        font-size: 4vh;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-
-        color: #ffffff;
-        font-weight: 600;
-        top: 179vh;
-        left: 50%; /* Set left to 50% */
-    transform: translateX(-50%);
-    
-        
-        position: absolute;
-    }
-
-</style>
-<script>
-    var opened = 0;
-    function openNav() {
-        if(opened == 0){
-  document.getElementById("mySidenav").style.width = "250px";
-opened =1;}
-
-  else{
-    document.getElementById("mySidenav").style.width = "0";
-    opened = 0;
-
-  }
-}
-
-
-</script> -->
+    -->
