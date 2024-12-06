@@ -12,40 +12,35 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f8f9fa;
-        }
+       body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #F5F5F5; /* Ivory White background */
+    color: #1A2238; /* Deep Sapphire Blue text */
+}
+
 /* Navbar styling */
 .navbar {
-    background-color: #2c3e50;
+    background-color: #273A5D; /* Midnight Navy */
     transition: all 0.3s ease;
 }
 
 .navbar-brand, .nav-link {
-    color: white !important;
+    color: #F5F5F5 !important;
     font-family: 'Poppins', sans-serif;
 }
 
 .navbar-toggler-icon {
-    background-color: white;
+    background-color: #F5F5F5;
 }
+
 .navbar.show {
     margin-left: 250px; /* Add margin to navbar when sidebar is visible */
 }
 
-/* Toggle icon on smaller screens */
-.navbar-toggler {
-    display: block !important; /* Make sure it is always displayed */
-    border: none;
-}
-
-
-
-
-        .sidebar {
-    background-color: #34495e;
-    color: white;
+/* Sidebar */
+.sidebar {
+    background-color: #34495e; /* Darker shade for the sidebar */
+    color: #F5F5F5; /* Ivory White text */
     width: 250px;
     position: fixed;
     top: 0;
@@ -55,29 +50,24 @@
     transition: all 0.3s;
 }
 
-        .sidebar.show {
-            left: 0;
-        }
+.sidebar.show {
+    left: 0;
+}
 
-        .sidebar .logo-section {
-            padding: 20px;
-            text-align: center;
-        }
+.sidebar a {
+    color: #F5F5F5;
+    text-decoration: none;
+    padding: 10px 15px;
+    display: block;
+    border-bottom: 1px solid #2c3e50;
+    font-family: 'Poppins', sans-serif;
+}
 
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 15px;
-            display: block;
-            border-bottom: 1px solid #2c3e50;
-            font-family: 'Poppins', sans-serif;
-        }
+.sidebar a:hover {
+    background-color: #C4A484; /* Rich Gold highlight */
+}
 
-        .sidebar a:hover {
-            background-color: #1abc9c;
-        }
-
-        /* Content styling */
+/* Content styling */
 .content {
     margin-left: 0;
     padding: 30px;
@@ -85,58 +75,54 @@
 }
 
 .content.show {
-    margin-left: 250px; /* Add this to shift content when sidebar is visible */
+    margin-left: 250px;
 }
 
-        .header-section {
-            background-color: #2980b9;
-            color: white;
-            padding: 60px 20px;
-            text-align: center;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
+.header-section {
+    background-color: #1A2238; /* Deep Sapphire Blue */
+    color: #F5F5F5;
+    padding: 60px 20px;
+    text-align: center;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
 
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            background-color: white;
-        }
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #F5F5F5; /* Ivory White */
+}
 
-        .card-body {
-            text-align: center;
-        }
+.card-body {
+    text-align: center;
+}
 
-        .card-title {
-            color: #2c3e50;
-        }
+.card-title {
+    color: #1A2238; /* Deep Sapphire Blue */
+}
 
-        .btn-primary {
-            background-color: #3498db;
-            border: none;
-            padding: 10px 20px;
-            width: 100%;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .btn-primary:hover {
-            background-color: #1d7ab9;
-        }
-
-        .container-fluid {
-            margin-top: 100px;
-        }
-
-        .navbar-toggler {
-    display: block !important; /* Make sure it is always displayed */
+.btn-primary {
+    background-color: #C4A484; /* Rich Gold */
     border: none;
+    padding: 10px 20px;
+    width: 100%;
+    text-transform: uppercase;
+    font-weight: bold;
 }
 
-        .logo-section img {
-            width: 80%;
-            margin-bottom: 15px;
-        }
+.btn-primary:hover {
+    background-color: #1d7ab9; /* Slightly darker shade */
+}
+
+.container-fluid {
+    margin-top: 100px;
+}
+
+/* Gradient Background */
+.header-section {
+    background: linear-gradient(135deg, #1A2238 0%, #273A5D 100%);
+}
+
     </style>
 </head>
 <body>
