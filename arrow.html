@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CMCLT1ZWS7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-CMCLT1ZWS7');
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blaster</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            border: 2px solid #000;
+            margin: auto;
+        }
+        #score {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+            font-weight: bold;
+            color: #222;
+            background: #ffffffaa;
+            padding: 10px 20px;
+            border-radius: 10px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Resize canvas to fit the screen
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        const player = {
+            x: 100,
+            y: canvas.height / 2 - 20,
+            width: 40,
+            height: 40,
+            speed: 10,
+            color: '#3498db',
+        };
+
+        let arrows = [];
+        let targets = [];
+        let score = 0;
+        let gameRunning = true;
+        let targetSpeed = 2;
+
+        // Arrow class
+        class Arrow {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 10;
+                this.height = 3;
+                this.color = '#333';
+            }
+
+            move() {
+                this.x += 7;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        // Target class
+        class Target {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 40;
+                this.height = 40;
+                this.color = 'green';
+                this.isHit = false;
+                this.hitAnimationFrame = 0;
+            }
+
+            move() {
+                if (!this.isHit) {
+                    this.x -= targetSpeed;
+                }
+            }
+
+            draw() {
+                if (this.isHit) {
+                    const alpha = 1 - this.hitAnimationFrame / 20; // Smooth fade-out
+                    const radius = this.width / 2 * (1 + this.hitAnimationFrame / 10); // Expanding radius
+                    ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    this.hitAnimationFrame++;
+                    if (this.hitAnimationFrame > 20) this.remove();
+                } else {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            remove() {
+                const index = targets.indexOf(this);
+                if (index !== -1) {
+                    targets.splice(index, 1);
+                }
+            }
+        }
+
+        // Draw player
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw firing point (like a cannon)
+            ctx.fillStyle = 'black';
+            ctx.fillRect(player.x + player.width, player.y + player.height / 2 - 5, 10, 10);
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw player
+            drawPlayer();
+
+            // Move and draw arrows
+            arrows.forEach((arrow, arrowIndex) => {
+                arrow.move();
+                arrow.draw();
+
+                // Check collisions with targets
+                targets.forEach((target) => {
+                    if (
+                        arrow.x < target.x + target.width &&
+                        arrow.x + arrow.width > target.x &&
+                        arrow.y < target.y + target.height &&
+                        arrow.y + arrow.height > target.y
+                    ) {
+                        target.isHit = true;
+                        arrows.splice(arrowIndex, 1); // Remove arrow
+                        score++;
+                        document.getElementById("score").textContent = `Score: ${score}`;
+                    }
+                });
+
+                // Remove off-screen arrows
+                if (arrow.x > canvas.width) {
+                    arrows.splice(arrowIndex, 1);
+                }
+            });
+
+            // Move and draw targets
+            targets.forEach((target) => {
+                target.move();
+                target.draw();
+
+                // Check if target passes player
+                if (target.x + target.width < 0) {
+                    gameRunning = false;
+                    document.getElementById("score").textContent = `Game Over! Final Score: ${score}`;
+                }
+            });
+
+            // Increase difficulty over time
+            if (score > 0 && score % 10 === 0) {
+                targetSpeed += 0.1;
+            }
+
+            // Request the next animation frame
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event listeners for controls
+        document.addEventListener("keydown", (e) => {
+            if (e.key === " " && gameRunning) {
+                // Fire arrow
+                arrows.push(new Arrow(player.x + player.width + 10, player.y + player.height / 2 - 2));
+            } else if (e.key === "ArrowUp" && player.y > 0) {
+                // Move player up
+                player.y -= player.speed;
+            } else if (e.key === "ArrowDown" && player.y < canvas.height - player.height) {
+                // Move player down
+                player.y += player.speed;
+            }
+        });
+
+        // Spawn targets at regular intervals
+        setInterval(() => {
+            if (gameRunning) {
+                const y = Math.random() * (canvas.height - 40);
+                targets.push(new Target(canvas.width, y));
+            }
+        }, 2500); // Lower spawn rate to 2.5 seconds
+
+        // Start game loop
+        gameLoop();
+    </script>
+</body>
+</html>

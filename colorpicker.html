@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CMCLT1ZWS7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-CMCLT1ZWS7');
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Picker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .color-box {
+      width: 100px;
+      height: 100px;
+      margin: 20px;
+      display: inline-block;
+    }
+    input[type="color"] {
+      width: 50px;
+      height: 50px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>Color Picker Tool</h2>
+  <input type="color" id="colorInput" onchange="changeColor()">
+  <div id="colorBox" class="color-box"></div>
+  <p id="colorCode"></p>
+
+  <script>
+    function changeColor() {
+      const color = document.getElementById('colorInput').value;
+      document.getElementById('colorBox').style.backgroundColor = color;
+      document.getElementById('colorCode').innerText = `Color Code: ${color}`;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CMCLT1ZWS7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-CMCLT1ZWS7');
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasure Hunt with Fog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #222;
+            color: #fff;
+            overflow: hidden;
+        }
+        canvas {
+            border: 2px solid #fff;
+            background: #444;
+        }
+        #game-info {
+            position: absolute;
+            top: 20px;
+            text-align: center;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-info">
+        <p id="level">Level: 1</p>
+        <p id="keys">Keys Collected: 0/2</p>
+        <p id="timer">Time Left: 30</p>
+    </div>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const gridSize = 10; // 10x10 grid
+        const cellSize = canvas.width / gridSize;
+        const viewRange = 2; // How far the player can see (3x3 area centered around the player)
+        let player = { x: 0, y: 0 };
+        let treasure = { x: 9, y: 9 };
+        let keys = [];
+        let traps = [];
+        let fog = [];
+        let collectedKeys = 0;
+        let level = 1;
+        let timeLeft = 30;
+        let gameInterval;
+
+        // Initialize game
+        function initGame() {
+            player = { x: 0, y: 0 };
+            treasure = { x: gridSize - 1, y: gridSize - 1 };
+            keys = [];
+            traps = [];
+            fog = Array.from({ length: gridSize }, () => Array(gridSize).fill(true));
+            collectedKeys = 0;
+            timeLeft = 30 + level * 5; // Extra time for higher levels
+
+            // Generate random keys and traps
+            while (keys.length < 2) {
+                const key = { x: rand(1, gridSize - 1), y: rand(1, gridSize - 1) };
+                if (!isOccupied(key)) keys.push(key);
+            }
+
+            while (traps.length < level + 2) {
+                const trap = { x: rand(1, gridSize - 1), y: rand(1, gridSize - 1), direction: rand(0, 1) ? "horizontal" : "vertical" };
+                if (!isOccupied(trap)) traps.push(trap);
+            }
+
+            fog[player.y][player.x] = false;
+            drawGame();
+            gameInterval = setInterval(updateTimer, 1000);
+        }
+
+        // Random number helper
+        function rand(min, max) {
+            return Math.floor(Math.random() * (max - min) + min);
+        }
+
+        // Check if a position is occupied
+        function isOccupied(pos) {
+            return (
+                (player.x === pos.x && player.y === pos.y) ||
+                (treasure.x === pos.x && treasure.y === pos.y) ||
+                keys.some(k => k.x === pos.x && k.y === pos.y) ||
+                traps.some(t => t.x === pos.x && t.y === pos.y)
+            );
+        }
+
+        // Update timer
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById("timer").innerText = `Time Left: ${timeLeft}`;
+            if (timeLeft <= 0) gameOver(false);
+        }
+
+        // Draw game grid
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Reset fog visibility
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    fog[y][x] = true; // Reset all cells to be fogged
+                }
+            }
+
+            // Reveal cells around the player
+            for (let dy = -viewRange; dy <= viewRange; dy++) {
+                for (let dx = -viewRange; dx <= viewRange; dx++) {
+                    const nx = player.x + dx, ny = player.y + dy;
+                    if (nx >= 0 && ny >= 0 && nx < gridSize && ny < gridSize) {
+                        fog[ny][nx] = false; // Reveal this cell
+                    }
+                }
+            }
+
+            // Draw cells
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    ctx.fillStyle = fog[y][x] ? "#222" : "#666"; // Darker for fog, lighter for visible
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    ctx.strokeStyle = "#444";
+                    ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
+            }
+
+            // Draw keys
+            keys.forEach(key => {
+                if (!fog[key.y][key.x]) {
+                    ctx.fillStyle = "gold";
+                    ctx.beginPath();
+                    ctx.arc(key.x * cellSize + cellSize / 2, key.y * cellSize + cellSize / 2, cellSize / 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            });
+
+            // Draw traps
+            traps.forEach(trap => {
+                if (!fog[trap.y][trap.x]) {
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(trap.x * cellSize + cellSize / 4, trap.y * cellSize + cellSize / 4, cellSize / 2, cellSize / 2);
+                }
+            });
+
+            // Draw treasure
+            if (!fog[treasure.y][treasure.x]) {
+                ctx.fillStyle = "green";
+                ctx.fillRect(treasure.x * cellSize + cellSize / 4, treasure.y * cellSize + cellSize / 4, cellSize / 2, cellSize / 2);
+            }
+
+            // Draw player
+            ctx.fillStyle = "blue";
+            ctx.fillRect(player.x * cellSize + cellSize / 4, player.y * cellSize + cellSize / 4, cellSize / 2, cellSize / 2);
+        }
+
+        // Handle player movement
+        document.addEventListener("keydown", e => {
+            let { x, y } = player;
+
+            if (e.key === "ArrowUp" && y > 0) y--;
+            if (e.key === "ArrowDown" && y < gridSize - 1) y++;
+            if (e.key === "ArrowLeft" && x > 0) x--;
+            if (e.key === "ArrowRight" && x < gridSize - 1) x++;
+
+            if (x !== player.x || y !== player.y) movePlayer(x, y);
+        });
+
+        // Move player
+        function movePlayer(x, y) {
+            player.x = x;
+            player.y = y;
+            drawGame(); // Redraw game after moving
+
+            // Check for key collection
+            keys = keys.filter(key => {
+                if (key.x === x && key.y === y) {
+                    collectedKeys++;
+                    document.getElementById("keys").innerText = `Keys Collected: ${collectedKeys}/2`;
+                    return false;
+                }
+                return true;
+            });
+
+            // Check for traps
+            if (traps.some(trap => trap.x === x && trap.y === y)) {
+                gameOver(false);
+                return;
+            }
+
+            // Check for treasure
+            if (x === treasure.x && y === treasure.y && collectedKeys === 2) {
+                gameOver(true);
+                return;
+            }
+        }
+
+        // End game
+        function gameOver(won) {
+            clearInterval(gameInterval);
+            alert(won ? "You Win!" : "Game Over");
+            if (won) level++;
+            initGame();
+        }
+
+        // Start game
+        initGame();
+    </script>
+</body>
+</html>

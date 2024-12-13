@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CMCLT1ZWS7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-CMCLT1ZWS7');
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Counter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    textarea {
+      width: 80%;
+      height: 150px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    p {
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Word Counter Tool</h2>
+  <textarea id="textInput" placeholder="Type or paste your text here..." oninput="countWords()"></textarea>
+  <p id="wordCount">Word Count: 0</p>
+
+  <script>
+    function countWords() {
+      const text = document.getElementById('textInput').value.trim();
+      const wordCount = text ? text.split(/\s+/).length : 0;
+      document.getElementById('wordCount').innerText = `Word Count: ${wordCount}`;
+    }
+  </script>
+</body>
+</html>
