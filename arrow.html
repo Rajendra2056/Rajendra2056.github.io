@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-CMCLT1ZWS7"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-CMCLT1ZWS7');
-</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMCLT1ZWS7"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-CMCLT1ZWS7');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blaster</title>
@@ -71,13 +70,40 @@
         .control-btn:active {
             background: #2980b9;
         }
+
+        #rotate-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 20;
+        }
+
+        @media (orientation: portrait) {
+            #rotate-message {
+                display: block;
+            }
+            canvas,
+            #controls,
+            #score {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
+    <div id="rotate-message">Please rotate your device to landscape mode to play.</div>
     <canvas id="gameCanvas"></canvas>
     
-    <!-- On-screen controls -->
     <div id="controls">
         <button class="control-btn" id="up-btn">&#8593;</button>
         <button class="control-btn" id="shoot-btn">&#x1F52B;</button>
@@ -87,14 +113,29 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
+        const rotateMessage = document.getElementById("rotate-message");
 
-        // Resize canvas to fit the screen
+        // Function to check orientation and handle display
+        function checkOrientation() {
+            if (window.innerWidth < window.innerHeight) {
+                rotateMessage.style.display = "block";
+            } else {
+                rotateMessage.style.display = "none";
+            }
+        }
+
+        window.addEventListener("resize", () => {
+            checkOrientation();
+            resizeCanvas();
+        });
+
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
-        window.addEventListener("resize", resizeCanvas);
+        
         resizeCanvas();
+        checkOrientation();
 
         const player = {
             x: 100,
@@ -111,7 +152,6 @@
         let gameRunning = true;
         let targetSpeed = 2;
 
-        // Arrow class
         class Arrow {
             constructor(x, y) {
                 this.x = x;
@@ -131,7 +171,6 @@
             }
         }
 
-        // Target class
         class Target {
             constructor(x, y) {
                 this.x = x;
@@ -151,8 +190,8 @@
 
             draw() {
                 if (this.isHit) {
-                    const alpha = 1 - this.hitAnimationFrame / 20; // Smooth fade-out
-                    const radius = this.width / 2 * (1 + this.hitAnimationFrame / 10); // Expanding radius
+                    const alpha = 1 - this.hitAnimationFrame / 20;
+                    const radius = this.width / 2 * (1 + this.hitAnimationFrame / 10);
                     ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
                     ctx.beginPath();
                     ctx.arc(this.x + this.width / 2, this.y + this.height / 2, radius, 0, Math.PI * 2);
@@ -175,33 +214,24 @@
             }
         }
 
-        // Draw player
         function drawPlayer() {
             ctx.fillStyle = player.color;
             ctx.beginPath();
             ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width / 2, 0, Math.PI * 2);
             ctx.fill();
-
-            // Draw firing point (like a cannon)
             ctx.fillStyle = 'black';
             ctx.fillRect(player.x + player.width, player.y + player.height / 2 - 5, 10, 10);
         }
 
-        // Game loop
         function gameLoop() {
             if (!gameRunning) return;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw player
             drawPlayer();
 
-            // Move and draw arrows
-            arrows.forEach((arrow, arrowIndex) => {
+            arrows.forEach((arrow, i) => {
                 arrow.move();
                 arrow.draw();
 
-                // Check collisions with targets
                 targets.forEach((target) => {
                     if (
                         arrow.x < target.x + target.width &&
@@ -210,54 +240,39 @@
                         arrow.y + arrow.height > target.y
                     ) {
                         target.isHit = true;
-                        arrows.splice(arrowIndex, 1); // Remove arrow
+                        arrows.splice(i, 1);
                         score++;
                         document.getElementById("score").textContent = `Score: ${score}`;
                     }
                 });
 
-                // Remove off-screen arrows
-                if (arrow.x > canvas.width) {
-                    arrows.splice(arrowIndex, 1);
-                }
+                if (arrow.x > canvas.width) arrows.splice(i, 1);
             });
 
-            // Move and draw targets
             targets.forEach((target) => {
                 target.move();
                 target.draw();
 
-                // Check if target passes player
                 if (target.x + target.width < 0) {
                     gameRunning = false;
                     document.getElementById("score").textContent = `Game Over! Final Score: ${score}`;
                 }
             });
 
-            // Increase difficulty over time
-            if (score > 0 && score % 10 === 0) {
-                targetSpeed += 0.1;
-            }
-
-            // Request the next animation frame
+            if (score > 0 && score % 10 === 0) targetSpeed += 0.1;
             requestAnimationFrame(gameLoop);
         }
 
-        // Event listeners for controls
         const upBtn = document.getElementById("up-btn");
         const downBtn = document.getElementById("down-btn");
         const shootBtn = document.getElementById("shoot-btn");
 
         upBtn.addEventListener("click", () => {
-            if (player.y > 0) {
-                player.y -= player.speed;
-            }
+            if (player.y > 0) player.y -= player.speed;
         });
 
         downBtn.addEventListener("click", () => {
-            if (player.y < canvas.height - player.height) {
-                player.y += player.speed;
-            }
+            if (player.y < canvas.height - player.height) player.y += player.speed;
         });
 
         shootBtn.addEventListener("click", () => {
@@ -266,15 +281,13 @@
             }
         });
 
-        // Spawn targets at regular intervals
         setInterval(() => {
             if (gameRunning) {
                 const y = Math.random() * (canvas.height - 40);
                 targets.push(new Target(canvas.width, y));
             }
-        }, 2500); // Lower spawn rate to 2.5 seconds
+        }, 2500);
 
-        // Start game loop
         gameLoop();
     </script>
 </body>
