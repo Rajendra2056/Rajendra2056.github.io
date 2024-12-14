@@ -36,7 +36,7 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
             color: #222;
             background: #ffffffaa;
@@ -44,11 +44,45 @@
             border-radius: 10px;
             z-index: 10;
         }
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background: #3498db;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        .control-btn:active {
+            background: #2980b9;
+        }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
     <canvas id="gameCanvas"></canvas>
+    
+    <!-- On-screen controls -->
+    <div id="controls">
+        <button class="control-btn" id="up-btn">&#8593;</button>
+        <button class="control-btn" id="shoot-btn">&#x1F52B;</button>
+        <button class="control-btn" id="down-btn">&#8595;</button>
+    </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -210,16 +244,25 @@
         }
 
         // Event listeners for controls
-        document.addEventListener("keydown", (e) => {
-            if (e.key === " " && gameRunning) {
-                // Fire arrow
-                arrows.push(new Arrow(player.x + player.width + 10, player.y + player.height / 2 - 2));
-            } else if (e.key === "ArrowUp" && player.y > 0) {
-                // Move player up
+        const upBtn = document.getElementById("up-btn");
+        const downBtn = document.getElementById("down-btn");
+        const shootBtn = document.getElementById("shoot-btn");
+
+        upBtn.addEventListener("click", () => {
+            if (player.y > 0) {
                 player.y -= player.speed;
-            } else if (e.key === "ArrowDown" && player.y < canvas.height - player.height) {
-                // Move player down
+            }
+        });
+
+        downBtn.addEventListener("click", () => {
+            if (player.y < canvas.height - player.height) {
                 player.y += player.speed;
+            }
+        });
+
+        shootBtn.addEventListener("click", () => {
+            if (gameRunning) {
+                arrows.push(new Arrow(player.x + player.width + 10, player.y + player.height / 2 - 2));
             }
         });
 
