@@ -76,7 +76,7 @@
       left: 0;
       width: 100%;
       z-index: 150;
-      /* Remove pointer-events: none so children work reliably */
+      /* Removing pointer-events: none for reliable touch events */
     }
     /* Left Joystick (Movement & Aim) */
     #moveJoystick {
@@ -231,11 +231,13 @@
         }
       });
       
-      // Clicking the canvas also fires a bullet (for non-touch)
-      canvas.addEventListener('click', (e) => {
-        e.preventDefault();
-        fireBullet();
-      });
+      // Only add the canvas click listener if the device does not support touch
+      if (!("ontouchstart" in window)) {
+        canvas.addEventListener('click', (e) => {
+          e.preventDefault();
+          fireBullet();
+        });
+      }
       
       // ----- Virtual Joystick for Movement & Aim (Left) -----
       const moveJoystick = document.getElementById('moveJoystick');
