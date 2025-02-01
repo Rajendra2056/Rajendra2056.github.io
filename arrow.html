@@ -189,602 +189,610 @@
   </div>
   
   <script>
-    // ----- Canvas Setup -----
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
-    // ----- Global Game Stats -----
-    let health = 100, ammo = 30, grenades = 3, score = 0;
-    
-    // Arrays for game objects
-    const bullets = [];
-    const enemyBullets = [];
-    const enemies = [];
-    const gifts = [];
-    const explosions = [];
-    const grenadesThrown = [];  // Grenade objects
-    
-    // Sound effects (update file paths as needed)
-    const sounds = {
-      shoot: new Audio('shoot.mp3'),
-      enemyShoot: new Audio('shoot.mp3'),
-      gift: new Audio('gift.mp3'),
-      explosion: new Audio('explosion.mp3'),
-      grenade: new Audio('grenade.mp3'),
-      gameover: new Audio('gameover.mp3')
-    };
-    
-    // Timing variable for delta time
-    let lastTime = performance.now();
-    
-    // Update HUD
-    function updateHUD() {
-      document.getElementById('health').textContent = health;
-      document.getElementById('ammo').textContent = ammo;
-      document.getElementById('grenades').textContent = grenades;
-      document.getElementById('score').textContent = score;
-    }
-    updateHUD();
-    
-    // ----- Player Object -----
-    const player = {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      radius: 20,
-      speed: 3  // Base speed per 16ms frame
-    };
-    
-    // ----- Input Management -----
-    // For desktop (keyboard and mouse)
-    const keys = {};
-    document.addEventListener('keydown', (e) => {
-      keys[e.key.toLowerCase()] = true;
-      if(e.key.toLowerCase() === 'r'){
-        ammo = 30;
-        grenades = 3;
-        updateHUD();
+    document.addEventListener('DOMContentLoaded', () => {
+      // ----- Canvas Setup -----
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
       }
-    });
-    document.addEventListener('keyup', (e) => {
-      keys[e.key.toLowerCase()] = false;
-    });
-    
-    const mouse = { x: canvas.width/2, y: canvas.height/2 };
-    canvas.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-      // Update aimAngle for desktop (if needed)
-      let dx = mouse.x - player.x, dy = mouse.y - player.y;
-      if(dx !== 0 || dy !== 0){
-        aimAngle = Math.atan2(dy, dx);
+      resizeCanvas();
+      
+      // ----- Global Game Stats -----
+      let health = 100, ammo = 30, grenades = 3, score = 0;
+      
+      // Arrays for game objects
+      const bullets = [];
+      const enemyBullets = [];
+      const enemies = [];
+      const gifts = [];
+      const explosions = [];
+      const grenadesThrown = [];  // Grenade objects
+      
+      // Sound effects (update file paths as needed)
+      const sounds = {
+        shoot: new Audio('shoot.mp3'),
+        enemyShoot: new Audio('shoot.mp3'),
+        gift: new Audio('gift.mp3'),
+        explosion: new Audio('explosion.mp3'),
+        grenade: new Audio('grenade.mp3'),
+        gameover: new Audio('gameover.mp3')
+      };
+      
+      // Timing variable for delta time
+      let lastTime = performance.now();
+      
+      // Update HUD
+      function updateHUD() {
+        document.getElementById('health').textContent = health;
+        document.getElementById('ammo').textContent = ammo;
+        document.getElementById('grenades').textContent = grenades;
+        document.getElementById('score').textContent = score;
       }
-    });
-    canvas.addEventListener('click', (e) => {
-      e.preventDefault();
-      fireBullet();
-    });
-    
-    // ----- Virtual Joysticks -----
-    // Left Joystick (Movement)
-    const moveJoystick = document.getElementById('moveJoystick');
-    const moveBase = document.getElementById('moveBase');
-    const moveKnob = document.getElementById('moveKnob');
-    const moveCenter = { x: moveBase.offsetWidth/2, y: moveBase.offsetHeight/2 };
-    let moveActive = false, moveTouchId = null;
-    let moveVector = { x: 0, y: 0 };
-    function resetMoveKnob() {
-      moveKnob.style.left = (moveCenter.x - moveKnob.offsetWidth/2) + "px";
-      moveKnob.style.top = (moveCenter.y - moveKnob.offsetHeight/2) + "px";
-      moveVector = { x: 0, y: 0 };
-    }
-    resetMoveKnob();
-    
-    moveJoystick.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if(e.changedTouches.length > 0){
-        const touch = e.changedTouches[0];
-        moveActive = true;
-        moveTouchId = touch.identifier;
-        updateMoveKnobPosition(touch.clientX, touch.clientY);
+      updateHUD();
+      
+      // ----- Player Object -----
+      const player = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        radius: 20,
+        speed: 3  // Base speed per 16ms frame
+      };
+      
+      // ----- Input Management -----
+      // For desktop (keyboard and mouse)
+      const keys = {};
+      document.addEventListener('keydown', (e) => {
+        keys[e.key.toLowerCase()] = true;
+        if(e.key.toLowerCase() === 'r'){
+          ammo = 30;
+          grenades = 3;
+          updateHUD();
+        }
+      });
+      document.addEventListener('keyup', (e) => {
+        keys[e.key.toLowerCase()] = false;
+      });
+      
+      const mouse = { x: canvas.width/2, y: canvas.height/2 };
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+        let dx = mouse.x - player.x, dy = mouse.y - player.y;
+        if(dx !== 0 || dy !== 0){
+          aimAngle = Math.atan2(dy, dx);
+        }
+      });
+      canvas.addEventListener('click', (e) => {
+        e.preventDefault();
+        fireBullet();
+      });
+      
+      // ----- Virtual Joysticks -----
+      // Left Joystick (Movement)
+      const moveJoystick = document.getElementById('moveJoystick');
+      const moveBase = document.getElementById('moveBase');
+      const moveKnob = document.getElementById('moveKnob');
+      // Use clientWidth/Height to ensure proper dimensions
+      const moveCenter = { x: moveBase.clientWidth / 2, y: moveBase.clientHeight / 2 };
+      let moveActive = false, moveTouchId = null;
+      let moveVector = { x: 0, y: 0 };
+      function resetMoveKnob() {
+        moveKnob.style.left = (moveCenter.x - moveKnob.offsetWidth / 2) + "px";
+        moveKnob.style.top = (moveCenter.y - moveKnob.offsetHeight / 2) + "px";
+        moveVector = { x: 0, y: 0 };
       }
-    });
-    moveJoystick.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      for(let touch of e.changedTouches){
-        if(touch.identifier === moveTouchId){
+      resetMoveKnob();
+      
+      moveJoystick.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if(e.changedTouches.length > 0){
+          const touch = e.changedTouches[0];
+          moveActive = true;
+          moveTouchId = touch.identifier;
           updateMoveKnobPosition(touch.clientX, touch.clientY);
         }
-      }
-    });
-    moveJoystick.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      for(let touch of e.changedTouches){
-        if(touch.identifier === moveTouchId){
-          moveActive = false;
-          moveTouchId = null;
-          resetMoveKnob();
+      });
+      moveJoystick.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        for(let touch of e.changedTouches){
+          if(touch.identifier === moveTouchId){
+            updateMoveKnobPosition(touch.clientX, touch.clientY);
+          }
         }
+      });
+      moveJoystick.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        for(let touch of e.changedTouches){
+          if(touch.identifier === moveTouchId){
+            moveActive = false;
+            moveTouchId = null;
+            resetMoveKnob();
+          }
+        }
+      });
+      
+      function updateMoveKnobPosition(clientX, clientY) {
+        const rect = moveJoystick.getBoundingClientRect();
+        let localX = clientX - rect.left;
+        let localY = clientY - rect.top;
+        let dx = localX - moveCenter.x;
+        let dy = localY - moveCenter.y;
+        const maxDist = 40;
+        let dist = Math.hypot(dx, dy);
+        if(dist > maxDist){
+          const ratio = maxDist / dist;
+          dx *= ratio;
+          dy *= ratio;
+        }
+        moveKnob.style.left = (moveCenter.x + dx - moveKnob.offsetWidth / 2) + "px";
+        moveKnob.style.top = (moveCenter.y + dy - moveKnob.offsetHeight / 2) + "px";
+        moveVector = { x: dx, y: dy };
       }
-    });
-    
-    function updateMoveKnobPosition(clientX, clientY) {
-      const rect = moveJoystick.getBoundingClientRect();
-      let localX = clientX - rect.left;
-      let localY = clientY - rect.top;
-      let dx = localX - moveCenter.x;
-      let dy = localY - moveCenter.y;
-      const maxDist = 40;
-      let dist = Math.hypot(dx, dy);
-      if(dist > maxDist){
-        const ratio = maxDist/dist;
-        dx *= ratio;
-        dy *= ratio;
+      
+      // Right Joystick (Aiming)
+      const aimJoystick = document.getElementById('aimJoystick');
+      const aimBase = document.getElementById('aimBase');
+      const aimKnob = document.getElementById('aimKnob');
+      const aimCenter = { x: aimBase.clientWidth / 2, y: aimBase.clientHeight / 2 };
+      let aimActive = false, aimTouchId = null;
+      let aimVector = { x: 0, y: 0 };
+      function resetAimKnob() {
+        aimKnob.style.left = (aimCenter.x - aimKnob.offsetWidth / 2) + "px";
+        aimKnob.style.top = (aimCenter.y - aimKnob.offsetHeight / 2) + "px";
+        aimVector = { x: 0, y: 0 };
       }
-      moveKnob.style.left = (moveCenter.x + dx - moveKnob.offsetWidth/2) + "px";
-      moveKnob.style.top = (moveCenter.y + dy - moveKnob.offsetHeight/2) + "px";
-      moveVector = { x: dx, y: dy };
-    }
-    
-    // Right Joystick (Aiming)
-    const aimJoystick = document.getElementById('aimJoystick');
-    const aimBase = document.getElementById('aimBase');
-    const aimKnob = document.getElementById('aimKnob');
-    const aimCenter = { x: aimBase.offsetWidth/2, y: aimBase.offsetHeight/2 };
-    let aimActive = false, aimTouchId = null;
-    let aimVector = { x: 0, y: 0 };
-    function resetAimKnob() {
-      aimKnob.style.left = (aimCenter.x - aimKnob.offsetWidth/2) + "px";
-      aimKnob.style.top = (aimCenter.y - aimKnob.offsetHeight/2) + "px";
-      aimVector = { x: 0, y: 0 };
-    }
-    resetAimKnob();
-    
-    aimJoystick.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if(e.changedTouches.length > 0){
-        const touch = e.changedTouches[0];
-        aimActive = true;
-        aimTouchId = touch.identifier;
-        updateAimKnobPosition(touch.clientX, touch.clientY);
-      }
-    });
-    aimJoystick.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      for(let touch of e.changedTouches){
-        if(touch.identifier === aimTouchId){
+      resetAimKnob();
+      
+      aimJoystick.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if(e.changedTouches.length > 0){
+          const touch = e.changedTouches[0];
+          aimActive = true;
+          aimTouchId = touch.identifier;
           updateAimKnobPosition(touch.clientX, touch.clientY);
         }
-      }
-    });
-    aimJoystick.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      for(let touch of e.changedTouches){
-        if(touch.identifier === aimTouchId){
-          // On release, if dragged beyond threshold, fire bullet
-          let dx = aimVector.x, dy = aimVector.y;
-          let dist = Math.hypot(dx, dy);
-          if(dist > 20){
-            aimAngle = Math.atan2(dy, dx);
-            fireBullet();
+      });
+      aimJoystick.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        for(let touch of e.changedTouches){
+          if(touch.identifier === aimTouchId){
+            updateAimKnobPosition(touch.clientX, touch.clientY);
           }
-          aimActive = false;
-          aimTouchId = null;
-          resetAimKnob();
+        }
+      });
+      aimJoystick.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        for(let touch of e.changedTouches){
+          if(touch.identifier === aimTouchId){
+            let dx = aimVector.x, dy = aimVector.y;
+            let dist = Math.hypot(dx, dy);
+            if(dist > 20){
+              aimAngle = Math.atan2(dy, dx);
+              fireBullet();
+            }
+            aimActive = false;
+            aimTouchId = null;
+            resetAimKnob();
+          }
+        }
+      });
+      
+      function updateAimKnobPosition(clientX, clientY) {
+        const rect = aimJoystick.getBoundingClientRect();
+        let localX = clientX - rect.left;
+        let localY = clientY - rect.top;
+        let dx = localX - aimCenter.x;
+        let dy = localY - aimCenter.y;
+        const maxDist = 40;
+        let dist = Math.hypot(dx, dy);
+        if(dist > maxDist){
+          const ratio = maxDist / dist;
+          dx *= ratio;
+          dy *= ratio;
+        }
+        aimKnob.style.left = (aimCenter.x + dx - aimKnob.offsetWidth / 2) + "px";
+        aimKnob.style.top = (aimCenter.y + dy - aimKnob.offsetHeight / 2) + "px";
+        aimVector = { x: dx, y: dy };
+      }
+      
+      // ----- Grenade Mechanic -----
+      const GRAVITY = 0.3;  // Gravity per frame
+      function throwGrenade() {
+        if (grenades > 0) {
+          const speed = 8; // initial grenade speed
+          const grenade = {
+            x: player.x,
+            y: player.y,
+            radius: 6,
+            vx: Math.cos(aimAngle) * speed,
+            vy: Math.sin(aimAngle) * speed,
+            timer: 2000  // explode after 2 seconds (ms)
+          };
+          grenadesThrown.push(grenade);
+          grenades--;
+          updateHUD();
+          sounds.grenade.currentTime = 0;
+          sounds.grenade.play();
         }
       }
-    });
-    
-    function updateAimKnobPosition(clientX, clientY) {
-      const rect = aimJoystick.getBoundingClientRect();
-      let localX = clientX - rect.left;
-      let localY = clientY - rect.top;
-      let dx = localX - aimCenter.x;
-      let dy = localY - aimCenter.y;
-      const maxDist = 40;
-      let dist = Math.hypot(dx, dy);
-      if(dist > maxDist){
-        const ratio = maxDist/dist;
-        dx *= ratio;
-        dy *= ratio;
-      }
-      aimKnob.style.left = (aimCenter.x + dx - aimKnob.offsetWidth/2) + "px";
-      aimKnob.style.top = (aimCenter.y + dy - aimKnob.offsetHeight/2) + "px";
-      aimVector = { x: dx, y: dy };
-    }
-    
-    // ----- Grenade Mechanic -----
-    // Grenade objects: x, y, vx, vy, timer
-    // Simple projectile motion with gravity
-    const GRAVITY = 0.3;  // gravity factor per frame
-    
-    function throwGrenade() {
-      if (grenades > 0) {
-        // Use current aimAngle (from right joystick or desktop mouse)
-        const speed = 8; // initial grenade speed
-        const grenade = {
-          x: player.x,
-          y: player.y,
-          radius: 6,
-          vx: Math.cos(aimAngle) * speed,
-          vy: Math.sin(aimAngle) * speed,
-          timer: 2000  // explode after 2 seconds (ms)
-        };
-        grenadesThrown.push(grenade);
-        grenades--;
-        updateHUD();
-        sounds.grenade.currentTime = 0;
-        sounds.grenade.play();
-      }
-    }
-    
-    // Add event listener to grenade button
-    document.getElementById('btnGrenade').addEventListener('touchstart', (e) => { e.preventDefault(); throwGrenade(); });
-    document.getElementById('btnGrenade').addEventListener('click', (e) => { e.preventDefault(); throwGrenade(); });
-    
-    // ----- Desktop UI: also allow keyboard for grenade (e.g., pressing "g")
-    document.addEventListener('keydown', (e) => {
-      if(e.key.toLowerCase() === 'g'){
-        throwGrenade();
-      }
-    });
-    
-    // ----- Game Objects Update -----
-    function update(dt) {
-      const factor = dt / 16;  // scale factor
-      
-      // Update movement using virtual joystick (left joystick) OR keyboard
-      let mvx = 0, mvy = 0;
-      // From virtual joystick:
-      if (moveActive) {
-        mvx += moveVector.x / 40; // normalized (maxDist is 40)
-        mvy += moveVector.y / 40;
-      }
-      // From keyboard:
-      if (keys['w'] || keys['arrowup']) mvy -= 1;
-      if (keys['s'] || keys['arrowdown']) mvy += 1;
-      if (keys['a'] || keys['arrowleft']) mvx -= 1;
-      if (keys['d'] || keys['arrowright']) mvx += 1;
-      if (mvx !== 0 || mvy !== 0) {
-        const mag = Math.hypot(mvx, mvy);
-        mvx /= mag;
-        mvy /= mag;
-        // Optionally update aimAngle if not using aim joystick:
-        if (!aimActive) {
-          aimAngle = Math.atan2(mvy, mvx);
+      document.getElementById('btnGrenade').addEventListener('touchstart', (e) => { e.preventDefault(); throwGrenade(); });
+      document.getElementById('btnGrenade').addEventListener('click', (e) => { e.preventDefault(); throwGrenade(); });
+      document.addEventListener('keydown', (e) => {
+        if(e.key.toLowerCase() === 'g'){
+          throwGrenade();
         }
-        player.x += mvx * player.speed * factor;
-        player.y += mvy * player.speed * factor;
+      });
+      
+      // ----- Utility: Desktop firing -----
+      function fireBullet() {
+        if (ammo > 0) {
+          const bullet = {
+            x: player.x,
+            y: player.y,
+            radius: 5,
+            dx: Math.cos(aimAngle) * 7,
+            dy: Math.sin(aimAngle) * 7
+          };
+          bullets.push(bullet);
+          ammo--;
+          updateHUD();
+          sounds.shoot.currentTime = 0;
+          sounds.shoot.play();
+        }
       }
       
-      // Constrain player within canvas
-      player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
-      player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+      // ----- Game Objects Update -----
+      function update(dt) {
+        const factor = dt / 16;  // Scale factor
       
-      // Update bullets
-      for (let i = bullets.length - 1; i >= 0; i--) {
-        const b = bullets[i];
-        b.x += b.dx * factor;
-        b.y += b.dy * factor;
-        if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height)
-          bullets.splice(i, 1);
-      }
+        // Update movement (virtual joystick OR keyboard)
+        let mvx = 0, mvy = 0;
+        if (moveActive) {
+          mvx += moveVector.x / 40;
+          mvy += moveVector.y / 40;
+        }
+        if (keys['w'] || keys['arrowup']) mvy -= 1;
+        if (keys['s'] || keys['arrowdown']) mvy += 1;
+        if (keys['a'] || keys['arrowleft']) mvx -= 1;
+        if (keys['d'] || keys['arrowright']) mvx += 1;
+        if (mvx !== 0 || mvy !== 0) {
+          const mag = Math.hypot(mvx, mvy);
+          mvx /= mag;
+          mvy /= mag;
+          if (!aimActive) {
+            aimAngle = Math.atan2(mvy, mvx);
+          }
+          player.x += mvx * player.speed * factor;
+          player.y += mvy * player.speed * factor;
+        }
       
-      // Update enemy bullets
-      for (let i = enemyBullets.length - 1; i >= 0; i--) {
-        const eb = enemyBullets[i];
-        eb.x += eb.dx * factor;
-        eb.y += eb.dy * factor;
-        if (eb.x < 0 || eb.x > canvas.width || eb.y < 0 || eb.y > canvas.height)
-          enemyBullets.splice(i, 1);
-        else {
-          const dist = Math.hypot(player.x - eb.x, player.y - eb.y);
-          if (dist < player.radius + eb.radius) {
+        // Constrain player
+        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+        player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+      
+        // Update bullets
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          const b = bullets[i];
+          b.x += b.dx * factor;
+          b.y += b.dy * factor;
+          if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height)
+            bullets.splice(i, 1);
+        }
+      
+        // Update enemy bullets
+        for (let i = enemyBullets.length - 1; i >= 0; i--) {
+          const eb = enemyBullets[i];
+          eb.x += eb.dx * factor;
+          eb.y += eb.dy * factor;
+          if (eb.x < 0 || eb.x > canvas.width || eb.y < 0 || eb.y > canvas.height)
             enemyBullets.splice(i, 1);
-            createExplosion(player.x, player.y);
+          else {
+            const dist = Math.hypot(player.x - eb.x, player.y - eb.y);
+            if (dist < player.radius + eb.radius) {
+              enemyBullets.splice(i, 1);
+              createExplosion(player.x, player.y);
+              health = 0;
+              updateHUD();
+            }
+          }
+        }
+      
+        // Update enemies
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          const enemy = enemies[i];
+          const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+          enemy.x += Math.cos(angle) * enemy.speed * factor;
+          enemy.y += Math.sin(angle) * enemy.speed * factor;
+          enemy.shootCooldown -= dt;
+          if (enemy.shootCooldown <= 0) {
+            const bulletAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+            const enemyBullet = {
+              x: enemy.x,
+              y: enemy.y,
+              radius: 5,
+              dx: Math.cos(bulletAngle) * 5,
+              dy: Math.sin(bulletAngle) * 5
+            };
+            enemyBullets.push(enemyBullet);
+            enemy.shootCooldown = Math.random() * 3000 + 2000;
+            sounds.enemyShoot.currentTime = 0;
+            sounds.enemyShoot.play();
+          }
+          const distToPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+          if (distToPlayer < player.radius + enemy.radius) {
+            createExplosion(enemy.x, enemy.y);
+            enemies.splice(i, 1);
             health = 0;
             updateHUD();
           }
         }
-      }
       
-      // Update enemies
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        const enemy = enemies[i];
-        const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-        enemy.x += Math.cos(angle) * enemy.speed * factor;
-        enemy.y += Math.sin(angle) * enemy.speed * factor;
-        enemy.shootCooldown -= dt;
-        if (enemy.shootCooldown <= 0) {
-          const bulletAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-          const enemyBullet = {
-            x: enemy.x,
-            y: enemy.y,
-            radius: 5,
-            dx: Math.cos(bulletAngle) * 5,
-            dy: Math.sin(bulletAngle) * 5
-          };
-          enemyBullets.push(enemyBullet);
-          enemy.shootCooldown = Math.random() * 3000 + 2000;
-          sounds.enemyShoot.currentTime = 0;
-          sounds.enemyShoot.play();
-        }
-        const distToPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
-        if (distToPlayer < player.radius + enemy.radius) {
-          createExplosion(enemy.x, enemy.y);
-          enemies.splice(i, 1);
-          health = 0;
-          updateHUD();
-        }
-      }
-      
-      // Update gifts
-      for (let i = gifts.length - 1; i >= 0; i--) {
-        const gift = gifts[i];
-        const dist = Math.hypot(player.x - gift.x, player.y - gift.y);
-        if (dist < player.radius + gift.radius) {
-          ammo += 10;
-          score += 50;
-          updateHUD();
-          gifts.splice(i, 1);
-          sounds.gift.currentTime = 0;
-          sounds.gift.play();
-        }
-      }
-      
-      // Check bullet-enemy collisions
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        const enemy = enemies[i];
-        for (let j = bullets.length - 1; j >= 0; j--) {
-          const bullet = bullets[j];
-          const dist = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
-          if (dist < enemy.radius + bullet.radius) {
-            createExplosion(enemy.x, enemy.y);
-            enemies.splice(i, 1);
-            bullets.splice(j, 1);
-            score += 100;
+        // Update gifts
+        for (let i = gifts.length - 1; i >= 0; i--) {
+          const gift = gifts[i];
+          const dist = Math.hypot(player.x - gift.x, player.y - gift.y);
+          if (dist < player.radius + gift.radius) {
+            ammo += 10;
+            score += 50;
             updateHUD();
-            break;
+            gifts.splice(i, 1);
+            sounds.gift.currentTime = 0;
+            sounds.gift.play();
           }
         }
-      }
       
-      // Update grenades (projectile motion)
-      for (let i = grenadesThrown.length - 1; i >= 0; i--) {
-        const gr = grenadesThrown[i];
-        // Update velocity with gravity (only affects vy)
-        gr.vy += GRAVITY * factor;
-        gr.x += gr.vx * factor;
-        gr.y += gr.vy * factor;
-        gr.timer -= dt;
-        // If timer expires, explode the grenade
-        if (gr.timer <= 0) {
-          createExplosion(gr.x, gr.y);
-          grenadesThrown.splice(i, 1);
+        // Check bullet-enemy collisions
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          const enemy = enemies[i];
+          for (let j = bullets.length - 1; j >= 0; j--) {
+            const bullet = bullets[j];
+            const dist = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
+            if (dist < enemy.radius + bullet.radius) {
+              createExplosion(enemy.x, enemy.y);
+              enemies.splice(i, 1);
+              bullets.splice(j, 1);
+              score += 100;
+              updateHUD();
+              break;
+            }
+          }
+        }
+      
+        // Update grenades (projectile motion)
+        for (let i = grenadesThrown.length - 1; i >= 0; i--) {
+          const gr = grenadesThrown[i];
+          gr.vy += GRAVITY * factor;
+          gr.x += gr.vx * factor;
+          gr.y += gr.vy * factor;
+          gr.timer -= dt;
+          if (gr.timer <= 0) {
+            createExplosion(gr.x, gr.y);
+            grenadesThrown.splice(i, 1);
+          }
+        }
+      
+        // Update explosions
+        for (let i = explosions.length - 1; i >= 0; i--) {
+          const exp = explosions[i];
+          exp.radius += 0.5 * factor;
+          exp.alpha -= 0.02 * factor;
+          if (exp.radius > exp.maxRadius || exp.alpha <= 0)
+            explosions.splice(i, 1);
         }
       }
       
-      // Update explosion animations
-      for (let i = explosions.length - 1; i >= 0; i--) {
-        const exp = explosions[i];
-        exp.radius += 0.5 * factor;
-        exp.alpha -= 0.02 * factor;
-        if (exp.radius > exp.maxRadius || exp.alpha <= 0)
-          explosions.splice(i, 1);
-      }
-    }
-    
-    // ----- Draw Function -----
-    function draw() {
-      // Dynamic background
-      const bgGradient = ctx.createRadialGradient(
-        canvas.width/2, canvas.height/2, 100,
-        canvas.width/2, canvas.height/2, canvas.width
-      );
-      bgGradient.addColorStop(0, '#222');
-      bgGradient.addColorStop(1, '#111');
-      ctx.fillStyle = bgGradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Dashed aiming line (from player using aimAngle)
-      ctx.save();
-      ctx.setLineDash([10, 10]);
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(player.x, player.y);
-      const aimLength = 100;
-      const ax = player.x + Math.cos(aimAngle) * aimLength;
-      const ay = player.y + Math.sin(aimAngle) * aimLength;
-      ctx.lineTo(ax, ay);
-      ctx.stroke();
-      ctx.restore();
-      
-      // Draw player with gradient and shadow
-      ctx.save();
-      const pGrad = ctx.createRadialGradient(
-        player.x - player.radius/2, player.y - player.radius/2,
-        player.radius/4,
-        player.x, player.y, player.radius
-      );
-      pGrad.addColorStop(0, '#00f');
-      pGrad.addColorStop(1, '#003');
-      ctx.fillStyle = pGrad;
-      ctx.shadowColor = 'rgba(0,0,255,0.7)';
-      ctx.shadowBlur = 20;
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-      
-      // Draw bullets with glow
-      bullets.forEach(bullet => {
-        ctx.save();
-        const bGrad = ctx.createRadialGradient(
-          bullet.x, bullet.y, 0,
-          bullet.x, bullet.y, 5
+      // ----- Draw Function -----
+      function draw() {
+        // Dynamic background
+        const bgGradient = ctx.createRadialGradient(
+          canvas.width/2, canvas.height/2, 100,
+          canvas.width/2, canvas.height/2, canvas.width
         );
-        bGrad.addColorStop(0, '#ff0');
-        bGrad.addColorStop(1, '#aa0');
-        ctx.fillStyle = bGrad;
-        ctx.shadowColor = 'rgba(255,255,0,0.8)';
-        ctx.shadowBlur = 10;
+        bgGradient.addColorStop(0, '#222');
+        bgGradient.addColorStop(1, '#111');
+        ctx.fillStyle = bgGradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Dashed aiming line (from player using aimAngle)
+        ctx.save();
+        ctx.setLineDash([10, 10]);
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI*2);
-        ctx.fill();
+        ctx.moveTo(player.x, player.y);
+        const aimLength = 100;
+        const ax = player.x + Math.cos(aimAngle) * aimLength;
+        const ay = player.y + Math.sin(aimAngle) * aimLength;
+        ctx.lineTo(ax, ay);
+        ctx.stroke();
         ctx.restore();
-      });
-      
-      // Draw enemy bullets with glow
-      enemyBullets.forEach(eb => {
+        
+        // Draw player
         ctx.save();
-        const ebGrad = ctx.createRadialGradient(
-          eb.x, eb.y, 0,
-          eb.x, eb.y, eb.radius
+        const pGrad = ctx.createRadialGradient(
+          player.x - player.radius/2, player.y - player.radius/2,
+          player.radius/4,
+          player.x, player.y, player.radius
         );
-        ebGrad.addColorStop(0, '#f90');
-        ebGrad.addColorStop(1, '#a60');
-        ctx.fillStyle = ebGrad;
-        ctx.shadowColor = 'rgba(255,140,0,0.8)';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(eb.x, eb.y, eb.radius, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-      });
-      
-      // Draw enemies with fiery glow
-      enemies.forEach(enemy => {
-        ctx.save();
-        const eGrad = ctx.createRadialGradient(
-          enemy.x, enemy.y, 0,
-          enemy.x, enemy.y, enemy.radius
-        );
-        eGrad.addColorStop(0, '#f00');
-        eGrad.addColorStop(1, '#600');
-        ctx.fillStyle = eGrad;
-        ctx.shadowColor = 'rgba(255,0,0,0.8)';
+        pGrad.addColorStop(0, '#00f');
+        pGrad.addColorStop(1, '#003');
+        ctx.fillStyle = pGrad;
+        ctx.shadowColor = 'rgba(0,0,255,0.7)';
         ctx.shadowBlur = 20;
         ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI*2);
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
+        
+        // Draw bullets
+        bullets.forEach(bullet => {
+          ctx.save();
+          const bGrad = ctx.createRadialGradient(
+            bullet.x, bullet.y, 0,
+            bullet.x, bullet.y, 5
+          );
+          bGrad.addColorStop(0, '#ff0');
+          bGrad.addColorStop(1, '#aa0');
+          ctx.fillStyle = bGrad;
+          ctx.shadowColor = 'rgba(255,255,0,0.8)';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        });
+        
+        // Draw enemy bullets
+        enemyBullets.forEach(eb => {
+          ctx.save();
+          const ebGrad = ctx.createRadialGradient(
+            eb.x, eb.y, 0,
+            eb.x, eb.y, eb.radius
+          );
+          ebGrad.addColorStop(0, '#f90');
+          ebGrad.addColorStop(1, '#a60');
+          ctx.fillStyle = ebGrad;
+          ctx.shadowColor = 'rgba(255,140,0,0.8)';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(eb.x, eb.y, eb.radius, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        });
+        
+        // Draw enemies
+        enemies.forEach(enemy => {
+          ctx.save();
+          const eGrad = ctx.createRadialGradient(
+            enemy.x, enemy.y, 0,
+            enemy.x, enemy.y, enemy.radius
+          );
+          eGrad.addColorStop(0, '#f00');
+          eGrad.addColorStop(1, '#600');
+          ctx.fillStyle = eGrad;
+          ctx.shadowColor = 'rgba(255,0,0,0.8)';
+          ctx.shadowBlur = 20;
+          ctx.beginPath();
+          ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        });
+        
+        // Draw gifts
+        gifts.forEach(gift => {
+          ctx.save();
+          const gGrad = ctx.createRadialGradient(
+            gift.x, gift.y, 0,
+            gift.x, gift.y, gift.radius
+          );
+          gGrad.addColorStop(0, '#0f0');
+          gGrad.addColorStop(1, '#060');
+          ctx.fillStyle = gGrad;
+          ctx.shadowColor = 'rgba(0,255,0,0.8)';
+          ctx.shadowBlur = 15;
+          ctx.beginPath();
+          ctx.arc(gift.x, gift.y, gift.radius, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        });
+        
+        // Draw grenades (projectile)
+        grenadesThrown.forEach(gr => {
+          ctx.save();
+          ctx.fillStyle = '#ffa500';
+          ctx.beginPath();
+          ctx.arc(gr.x, gr.y, gr.radius, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        });
+        
+        // Draw explosions
+        explosions.forEach(exp => {
+          ctx.save();
+          ctx.globalAlpha = exp.alpha;
+          ctx.fillStyle = 'orange';
+          ctx.beginPath();
+          ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        });
+      }
+      
+      // ----- Main Game Loop -----
+      function gameLoop(currentTime) {
+        const dt = currentTime - lastTime;
+        lastTime = currentTime;
+        update(dt);
+        draw();
+        if (health > 0) requestAnimationFrame(gameLoop);
+        else gameOver();
+      }
+      
+      function gameOver() {
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = '50px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText("Game Over", canvas.width/2, canvas.height/2);
+        ctx.font = '30px Arial';
+        ctx.fillText("Score: " + score, canvas.width/2, canvas.height/2 + 50);
+        sounds.gameover.currentTime = 0;
+        sounds.gameover.play();
+      }
+      
+      // ----- Spawn Functions -----
+      function spawnEnemy() {
+        let x, y;
+        const edge = Math.floor(Math.random() * 4);
+        if (edge === 0) { x = Math.random() * canvas.width; y = -30; }
+        else if (edge === 1) { x = canvas.width + 30; y = Math.random() * canvas.height; }
+        else if (edge === 2) { x = Math.random() * canvas.width; y = canvas.height + 30; }
+        else { x = -30; y = Math.random() * canvas.height; }
+        const enemy = {
+          x: x,
+          y: y,
+          radius: 20,
+          speed: 1.5,
+          shootCooldown: Math.random() * 3000 + 2000
+        };
+        enemies.push(enemy);
+      }
+      
+      function spawnGift() {
+        const gift = {
+          x: Math.random() * (canvas.width - 100) + 50,
+          y: Math.random() * (canvas.height - 100) + 50,
+          radius: 15
+        };
+        gifts.push(gift);
+        setTimeout(() => {
+          const idx = gifts.indexOf(gift);
+          if (idx !== -1) gifts.splice(idx, 1);
+        }, 10000);
+      }
+      
+      // ----- Start Game Button -----
+      document.getElementById('startButton').addEventListener('click', () => {
+        document.getElementById('startScreen').style.display = 'none';
+        // Reset game stats if needed
+        health = 100; ammo = 30; grenades = 3; score = 0;
+        updateHUD();
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
       });
       
-      // Draw gifts with sparkling effect
-      gifts.forEach(gift => {
-        ctx.save();
-        const gGrad = ctx.createRadialGradient(
-          gift.x, gift.y, 0,
-          gift.x, gift.y, gift.radius
-        );
-        gGrad.addColorStop(0, '#0f0');
-        gGrad.addColorStop(1, '#060');
-        ctx.fillStyle = gGrad;
-        ctx.shadowColor = 'rgba(0,255,0,0.8)';
-        ctx.shadowBlur = 15;
-        ctx.beginPath();
-        ctx.arc(gift.x, gift.y, gift.radius, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-      });
+      // ----- Periodic Spawning -----
+      setInterval(spawnEnemy, 2000);
+      setInterval(spawnGift, 10000);
       
-      // Draw grenades (projectile) with a distinct look
-      grenadesThrown.forEach(gr => {
-        ctx.save();
-        ctx.fillStyle = '#ffa500';
-        ctx.beginPath();
-        ctx.arc(gr.x, gr.y, gr.radius, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
+      // Adjust canvas on window resize
+      window.addEventListener('resize', () => {
+        resizeCanvas();
       });
-      
-      // Draw explosion animations
-      explosions.forEach(exp => {
-        ctx.save();
-        ctx.globalAlpha = exp.alpha;
-        ctx.fillStyle = 'orange';
-        ctx.beginPath();
-        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-      });
-    }
-    
-    // ----- Main Game Loop -----
-    function gameLoop(currentTime) {
-      const dt = currentTime - lastTime;
-      lastTime = currentTime;
-      update(dt);
-      draw();
-      if (health > 0) requestAnimationFrame(gameLoop);
-      else gameOver();
-    }
-    
-    function gameOver() {
-      ctx.fillStyle = 'rgba(0,0,0,0.8)';
-      ctx.fillRect(0,0,canvas.width, canvas.height);
-      ctx.fillStyle = '#fff';
-      ctx.font = '50px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText("Game Over", canvas.width/2, canvas.height/2);
-      ctx.font = '30px Arial';
-      ctx.fillText("Score: " + score, canvas.width/2, canvas.height/2 + 50);
-      sounds.gameover.currentTime = 0;
-      sounds.gameover.play();
-    }
-    
-    // ----- Spawn Functions -----
-    function spawnEnemy() {
-      let x, y;
-      const edge = Math.floor(Math.random() * 4);
-      if (edge === 0) { x = Math.random() * canvas.width; y = -30; }
-      else if (edge === 1) { x = canvas.width + 30; y = Math.random() * canvas.height; }
-      else if (edge === 2) { x = Math.random() * canvas.width; y = canvas.height + 30; }
-      else { x = -30; y = Math.random() * canvas.height; }
-      const enemy = {
-        x: x,
-        y: y,
-        radius: 20,
-        speed: 1.5,
-        shootCooldown: Math.random() * 3000 + 2000
-      };
-      enemies.push(enemy);
-    }
-    
-    function spawnGift() {
-      const gift = {
-        x: Math.random() * (canvas.width - 100) + 50,
-        y: Math.random() * (canvas.height - 100) + 50,
-        radius: 15
-      };
-      gifts.push(gift);
-      setTimeout(() => {
-        const idx = gifts.indexOf(gift);
-        if (idx !== -1) gifts.splice(idx, 1);
-      }, 10000);
-    }
-    
-    // ----- Start Game Button -----
-    document.getElementById('startButton').addEventListener('click', () => {
-      document.getElementById('startScreen').style.display = 'none';
-      // Reset game stats if needed
-      health = 100; ammo = 30; grenades = 3; score = 0;
-      updateHUD();
-      lastTime = performance.now();
-      requestAnimationFrame(gameLoop);
-    });
-    
-    // ----- Periodic Spawning -----
-    setInterval(spawnEnemy, 2000);
-    setInterval(spawnGift, 10000);
-    
-    // Adjust canvas size on window resize
-    window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
     });
   </script>
 </body>
