@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <!-- Disable zooming on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>2D Shooter with Left Joystick & Shoot Button</title>
+  <title>2D Shooter with Fast Controls & Skill Button</title>
   <style>
     /* Prevent text selection */
     * {
@@ -30,7 +30,7 @@
       color: #fff;
       font-family: Arial, sans-serif;
       font-size: 18px;
-      z-index: 200;
+      z-index: 210;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
     /* Start screen overlay */
@@ -75,8 +75,7 @@
       bottom: 20px;
       left: 0;
       width: 100%;
-      z-index: 150;
-      /* pointer-events not disabled here */
+      z-index: 200;
     }
     /* Left Joystick (Movement & Aim) */
     #moveJoystick {
@@ -99,7 +98,7 @@
       position: absolute;
       width: 50px;
       height: 50px;
-      background: rgba(0, 200, 0, 0.8);
+      background: rgba(0,200,0,0.8);
       border: 2px solid #fff;
       border-radius: 50%;
       left: calc(50% - 25px);
@@ -118,7 +117,22 @@
       background: #00aaff;
       color: #fff;
       font-size: 20px;
-      z-index: 150;
+      z-index: 210;
+      pointer-events: auto;
+    }
+    /* Skill Button */
+    #btnSkill {
+      position: absolute;
+      bottom: 110px;
+      right: 20px;
+      width: 80px;
+      height: 80px;
+      border: none;
+      border-radius: 50%;
+      background: #ff5500;
+      color: #fff;
+      font-size: 16px;
+      z-index: 210;
       pointer-events: auto;
     }
   </style>
@@ -128,15 +142,17 @@
   <div id="hud">
     Health: <span id="health">100</span> |
     Ammo: <span id="ammo">30</span> |
-    Score: <span id="score">0</span>
+    Score: <span id="score">0</span> |
+    Skill: <span id="skillCount">3</span>
   </div>
-  <!-- Start Screen Overlay -->
+  <!-- Start screen overlay -->
   <div id="startScreen">
     <h1>2D Shooter</h1>
     <p>
-      Use the left joystick (or WASD/arrow keys) to move and set your aim direction.<br>
-      Tap the shoot button (or click the mouse) to fire.<br>
-      On non-touch devices you can also aim with the mouse.
+      Use the left joystick (or WASD/arrow keys) to move and set your aim.<br>
+      Tap the shoot button to fire a bullet in the aim direction.<br>
+      On non-touch devices you can also aim with the mouse.<br>
+      Use the Skill button to fire bullets in every direction (3 sec cooldown, 3 uses).
     </p>
     <button id="startButton">Start Game</button>
   </div>
@@ -151,6 +167,8 @@
     </div>
     <!-- Right Shoot Button -->
     <button id="btnShoot">Shoot</button>
+    <!-- Skill Button -->
+    <button id="btnSkill">Skill</button>
   </div>
   
   <script>
@@ -166,6 +184,11 @@
       
       // ----- Global Game Stats -----
       let health = 100, ammo = 30, score = 0;
+      // Skill stats:
+      let skillCount = 3; // limited uses
+      let skillReady = true; // cooldown flag
+      const skillCooldownDuration = 3000; // in ms
+      let lastSkillTime = 0;
       
       // Global aimAngle (in radians)
       let aimAngle = -Math.PI / 2;
@@ -194,6 +217,7 @@
         document.getElementById('health').textContent = health;
         document.getElementById('ammo').textContent = ammo;
         document.getElementById('score').textContent = score;
+        document.getElementById('skillCount').textContent = skillCount;
       }
       updateHUD();
       
@@ -219,8 +243,11 @@
         keys[e.key.toLowerCase()] = false;
       });
       
-      // Add mouse aiming only on non-touch devices
-      if (!("ontouchstart" in window)) {
+      // Declare mouse variable
+      const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+      
+      // For devices that support hover (non-touch), add mouse aiming.
+      if (window.matchMedia("(hover: hover)").matches) {
         canvas.addEventListener('mousemove', (e) => {
           const rect = canvas.getBoundingClientRect();
           mouse.x = e.clientX - rect.left;
@@ -230,10 +257,6 @@
             aimAngle = Math.atan2(dy, dx);
           }
         });
-      }
-      
-      // For non-touch devices, clicking the canvas fires a bullet.
-      if (!("ontouchstart" in window)) {
         canvas.addEventListener('click', (e) => {
           e.preventDefault();
           fireBullet();
@@ -301,7 +324,7 @@
         moveKnob.style.left = (moveCenter.x + dx - moveKnob.offsetWidth / 2) + "px";
         moveKnob.style.top = (moveCenter.y + dy - moveKnob.offsetHeight / 2) + "px";
         moveVector = { x: dx, y: dy };
-        // On touch devices, update aim only if the joystick is moved far enough
+        // On touch devices, update aim only if the joystick is moved sufficiently
         if(Math.hypot(dx, dy) > 5){
           aimAngle = Math.atan2(dy, dx);
         }
@@ -311,17 +334,20 @@
       const btnShoot = document.getElementById('btnShoot');
       btnShoot.addEventListener('touchstart', (e) => { e.preventDefault(); fireBullet(); });
       btnShoot.addEventListener('click', (e) => { e.preventDefault(); fireBullet(); });
-      // Also support spacebar for shooting on non-touch devices
       document.addEventListener('keydown', (e) => {
         if(e.key === ' '){
           fireBullet();
         }
       });
       
-      // ----- Firing Bullet Function -----
+      // ----- Skill Button (Multi-directional Shot) -----
+      const btnSkill = document.getElementById('btnSkill');
+      btnSkill.addEventListener('touchstart', (e) => { e.preventDefault(); useSkill(); });
+      btnSkill.addEventListener('click', (e) => { e.preventDefault(); useSkill(); });
+      
+      // ----- Firing Bullet Function (Single Shot) -----
       function fireBullet() {
         if (ammo > 0) {
-          // Spawn bullet at the edge of the player's circle along the aimAngle
           const spawnX = player.x + Math.cos(aimAngle) * player.radius;
           const spawnY = player.y + Math.sin(aimAngle) * player.radius;
           const bullet = {
@@ -336,6 +362,47 @@
           updateHUD();
           sounds.shoot.currentTime = 0;
           sounds.shoot.play();
+        }
+      }
+      
+      // ----- Use Skill Function (Multi-directional Shot) -----
+      function useSkill() {
+        if (skillCount > 0 && skillReady) {
+          // Record the time of skill use
+          lastSkillTime = performance.now();
+          // Fire bullets in 360° (e.g., 12 bullets, one every 30°)
+          const numBullets = 12;
+          for (let i = 0; i < numBullets; i++) {
+            const angle = i * (2 * Math.PI / numBullets);
+            const spawnX = player.x + Math.cos(angle) * player.radius;
+            const spawnY = player.y + Math.sin(angle) * player.radius;
+            const bullet = {
+              x: spawnX,
+              y: spawnY,
+              radius: 5,
+              dx: Math.cos(angle) * 7,
+              dy: Math.sin(angle) * 7
+            };
+            bullets.push(bullet);
+          }
+          skillCount--;
+          updateHUD();
+          skillReady = false;
+        }
+      }
+      
+      // In each update cycle, update the visual cooldown on the Skill button if needed.
+      function updateSkillCooldown() {
+        if (!skillReady) {
+          const elapsed = performance.now() - lastSkillTime;
+          const remaining = Math.max(0, skillCooldownDuration - elapsed);
+          btnSkill.innerHTML = "CD: " + (remaining / 1000).toFixed(1);
+          if (remaining <= 0) {
+            skillReady = true;
+            btnSkill.innerHTML = "Skill";
+          }
+        } else {
+          btnSkill.innerHTML = "Skill";
         }
       }
       
@@ -356,12 +423,14 @@
       // ----- Game Objects Update -----
       function update(dt) {
         const factor = dt / 16;  // Scale factor
-      
-        // Update movement
+        
+        // Update the skill cooldown visual each frame
+        updateSkillCooldown();
+        
+        // Update movement (touch joystick or keyboard)
         let mvx = 0, mvy = 0;
-        // Priority: if touch joystick active, use that; otherwise use keyboard.
         if (moveActive) {
-          mvx += moveVector.x / 40; // normalize (maxDist used above)
+          mvx += moveVector.x / 40;
           mvy += moveVector.y / 40;
         }
         if (keys['w'] || keys['arrowup']) mvy -= 1;
@@ -372,15 +441,14 @@
           const mag = Math.hypot(mvx, mvy);
           mvx /= mag;
           mvy /= mag;
-          // Update player position
           player.x += mvx * player.speed * factor;
           player.y += mvy * player.speed * factor;
         }
-      
+        
         // Constrain player within canvas
         player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
         player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
-      
+        
         // Update bullets
         for (let i = bullets.length - 1; i >= 0; i--) {
           const b = bullets[i];
@@ -389,7 +457,7 @@
           if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height)
             bullets.splice(i, 1);
         }
-      
+        
         // Update enemy bullets
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
           const eb = enemyBullets[i];
@@ -407,7 +475,7 @@
             }
           }
         }
-      
+        
         // Update enemies
         for (let i = enemies.length - 1; i >= 0; i--) {
           const enemy = enemies[i];
@@ -437,7 +505,7 @@
             updateHUD();
           }
         }
-      
+        
         // Update gifts (for ammo and score)
         for (let i = gifts.length - 1; i >= 0; i--) {
           const gift = gifts[i];
@@ -451,7 +519,7 @@
             sounds.gift.play();
           }
         }
-      
+        
         // Check bullet-enemy collisions
         for (let i = enemies.length - 1; i >= 0; i--) {
           const enemy = enemies[i];
@@ -468,7 +536,7 @@
             }
           }
         }
-      
+        
         // Update explosions
         for (let i = explosions.length - 1; i >= 0; i--) {
           const exp = explosions[i];
@@ -664,7 +732,7 @@
       document.getElementById('startButton').addEventListener('click', () => {
         document.getElementById('startScreen').style.display = 'none';
         // Reset game stats if needed
-        health = 100; ammo = 30; score = 0;
+        health = 100; ammo = 30; score = 0; skillCount = 3; skillReady = true;
         updateHUD();
         lastTime = performance.now();
         requestAnimationFrame(gameLoop);
