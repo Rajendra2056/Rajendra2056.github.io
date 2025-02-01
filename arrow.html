@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <!-- Disable zooming on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>2D Shooter with Fast Controls & Skill Button</title>
+  <title>2D Shooter with Fast Controls, Skill & High Scores</title>
   <style>
     /* Prevent text selection */
     * {
@@ -34,7 +34,7 @@
       text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
     /* Start screen overlay */
-    #startScreen {
+    #startScreen, #highScoreScreen {
       position: absolute;
       top: 0;
       left: 0;
@@ -42,7 +42,7 @@
       height: 100%;
       background: rgba(0,0,0,0.9);
       z-index: 300;
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -51,7 +51,10 @@
       text-align: center;
       padding: 20px;
     }
-    #startScreen h1 {
+    #startScreen.active, #highScoreScreen.active {
+      display: flex;
+    }
+    #startScreen h1, #highScoreScreen h1 {
       font-size: 48px;
       margin-bottom: 20px;
     }
@@ -60,7 +63,7 @@
       margin-bottom: 30px;
       line-height: 1.5;
     }
-    #startScreen button {
+    #startScreen button, #highScoreScreen button {
       font-size: 24px;
       padding: 10px 20px;
       border: none;
@@ -68,6 +71,7 @@
       background: #00aaff;
       color: #fff;
       cursor: pointer;
+      margin: 5px;
     }
     /* Virtual Controls Container */
     #controls {
@@ -146,7 +150,7 @@
     Skill: <span id="skillCount">3</span>
   </div>
   <!-- Start screen overlay -->
-  <div id="startScreen">
+  <div id="startScreen" class="active">
     <h1>2D Shooter</h1>
     <p>
       Use the left joystick (or WASD/arrow keys) to move and set your aim.<br>
@@ -155,6 +159,13 @@
       Use the Skill button to fire bullets in every direction (3 sec cooldown, 3 uses).
     </p>
     <button id="startButton">Start Game</button>
+    <button id="showHighScores">High Scores</button>
+  </div>
+  <!-- High Score Screen -->
+  <div id="highScoreScreen">
+    <h1>High Scores</h1>
+    <div id="highScoreList"></div>
+    <button id="backButton">Back</button>
   </div>
   <canvas id="gameCanvas"></canvas>
   
@@ -246,7 +257,7 @@
       // Declare mouse variable
       const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
       
-      // For devices that support hover (non-touch), add mouse aiming.
+      // For devices that support hover (non-touch), add mouse aiming and canvas click.
       if (window.matchMedia("(hover: hover)").matches) {
         canvas.addEventListener('mousemove', (e) => {
           const rect = canvas.getBoundingClientRect();
@@ -368,9 +379,7 @@
       // ----- Use Skill Function (Multi-directional Shot) -----
       function useSkill() {
         if (skillCount > 0 && skillReady) {
-          // Record the time of skill use
           lastSkillTime = performance.now();
-          // Fire bullets in 360° (e.g., 12 bullets, one every 30°)
           const numBullets = 12;
           for (let i = 0; i < numBullets; i++) {
             const angle = i * (2 * Math.PI / numBullets);
@@ -391,7 +400,7 @@
         }
       }
       
-      // In each update cycle, update the visual cooldown on the Skill button if needed.
+      // Update the visual cooldown on the Skill button
       function updateSkillCooldown() {
         if (!skillReady) {
           const elapsed = performance.now() - lastSkillTime;
@@ -420,11 +429,69 @@
         sounds.explosion.play();
       }
       
+      // ----- High Score Functions -----
+      const HIGH_SCORES_KEY = "highScores";
+      const MAX_HIGH_SCORES = 10;
+      
+      // Retrieve stored high scores (array of objects with name and score)
+      function getHighScores() {
+        const hs = localStorage.getItem(HIGH_SCORES_KEY);
+        return hs ? JSON.parse(hs) : [];
+      }
+      
+      // Save the high scores array back to localStorage
+      function saveHighScores(scores) {
+        localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(scores));
+      }
+      
+      // Attempt to save the current score if it qualifies
+      function trySaveHighScore(currentScore) {
+        let highScores = getHighScores();
+        // If less than MAX_HIGH_SCORES, or currentScore is higher than the lowest score
+        if (highScores.length < MAX_HIGH_SCORES || currentScore > highScores[highScores.length - 1].score) {
+          let name = prompt("New High Score! Enter your name:", "Player");
+          if (!name) name = "Anonymous";
+          // Insert in the right spot (sorted descending)
+          highScores.push({ name, score: currentScore });
+          highScores.sort((a, b) => b.score - a.score);
+          if (highScores.length > MAX_HIGH_SCORES) {
+            highScores = highScores.slice(0, MAX_HIGH_SCORES);
+          }
+          saveHighScores(highScores);
+        }
+      }
+      
+      // Display high scores in the High Score screen overlay
+      function showHighScores() {
+        const highScores = getHighScores();
+        const listDiv = document.getElementById('highScoreList');
+        listDiv.innerHTML = "";
+        if (highScores.length === 0) {
+          listDiv.innerHTML = "<p>No high scores yet.</p>";
+        } else {
+          const ul = document.createElement("ul");
+          ul.style.listStyle = "none";
+          highScores.forEach(entry => {
+            const li = document.createElement("li");
+            li.textContent = `${entry.name}: ${entry.score}`;
+            ul.appendChild(li);
+          });
+          listDiv.appendChild(ul);
+        }
+        // Show the high score overlay
+        document.getElementById('highScoreScreen').classList.add("active");
+      }
+      
+      // Hide high score screen
+      function hideHighScores() {
+        document.getElementById('highScoreScreen').classList.remove("active");
+      }
+      
       // ----- Game Objects Update -----
       function update(dt) {
         const factor = dt / 16;  // Scale factor
         
-        // Update the skill cooldown visual each frame
+        // Update skill cooldown visual
         updateSkillCooldown();
         
         // Update movement (touch joystick or keyboard)
@@ -680,8 +747,11 @@
         lastTime = currentTime;
         update(dt);
         draw();
-        if (health > 0) requestAnimationFrame(gameLoop);
-        else gameOver();
+        if (health > 0) {
+          requestAnimationFrame(gameLoop);
+        } else {
+          gameOver();
+        }
       }
       
       function gameOver() {
@@ -695,6 +765,70 @@
         ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 50);
         sounds.gameover.currentTime = 0;
         sounds.gameover.play();
+        // Check if the current score qualifies for high scores
+        trySaveHighScore(score);
+        // Show the start menu with high score option again
+        document.getElementById('startScreen').classList.add("active");
+      }
+      
+      // ----- High Score Functions -----
+ 
+      
+      function getHighScores() {
+        const hs = localStorage.getItem(HIGH_SCORES_KEY);
+        return hs ? JSON.parse(hs) : [];
+      }
+      
+      function saveHighScores(scores) {
+        localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(scores));
+      }
+      
+      function trySaveHighScore(currentScore) {
+        let highScores = getHighScores();
+        if (highScores.length < MAX_HIGH_SCORES || currentScore > highScores[highScores.length - 1].score) {
+          let name = prompt("New High Score! Enter your name:", "Player");
+          if (!name) name = "Anonymous";
+          highScores.push({ name, score: currentScore });
+          highScores.sort((a, b) => b.score - a.score);
+          if (highScores.length > MAX_HIGH_SCORES) {
+            highScores = highScores.slice(0, MAX_HIGH_SCORES);
+          }
+          saveHighScores(highScores);
+        }
+      }
+      
+      // ----- High Score Screen Controls -----
+      document.getElementById('showHighScores').addEventListener('click', () => {
+        showHighScores();
+      });
+      document.getElementById('backButton').addEventListener('click', () => {
+        hideHighScores();
+      });
+      
+      function showHighScores() {
+        const highScores = getHighScores();
+        const listDiv = document.getElementById('highScoreList');
+        listDiv.innerHTML = "";
+        if (highScores.length === 0) {
+          listDiv.innerHTML = "<p>No high scores yet.</p>";
+        } else {
+          const ul = document.createElement("ul");
+          ul.style.listStyle = "none";
+          ul.style.padding = "0";
+          highScores.forEach(entry => {
+            const li = document.createElement("li");
+            li.textContent = `${entry.name}: ${entry.score}`;
+            ul.appendChild(li);
+          });
+          listDiv.appendChild(ul);
+        }
+        document.getElementById('highScoreScreen').classList.add("active");
+        document.getElementById('startScreen').classList.remove("active");
+      }
+      
+      function hideHighScores() {
+        document.getElementById('highScoreScreen').classList.remove("active");
+        document.getElementById('startScreen').classList.add("active");
       }
       
       // ----- Spawn Functions -----
@@ -730,7 +864,7 @@
       
       // ----- Start Game Button -----
       document.getElementById('startButton').addEventListener('click', () => {
-        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('startScreen').classList.remove("active");
         // Reset game stats if needed
         health = 100; ammo = 30; score = 0; skillCount = 3; skillReady = true;
         updateHUD();
