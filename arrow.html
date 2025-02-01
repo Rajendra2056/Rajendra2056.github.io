@@ -76,7 +76,7 @@
       left: 0;
       width: 100%;
       z-index: 150;
-      /* Removing pointer-events: none for reliable touch events */
+      /* pointer-events not disabled here */
     }
     /* Left Joystick (Movement & Aim) */
     #moveJoystick {
@@ -219,19 +219,20 @@
         keys[e.key.toLowerCase()] = false;
       });
       
-      // Mouse aiming support (for non-touch devices)
-      const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
-      canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        mouse.x = e.clientX - rect.left;
-        mouse.y = e.clientY - rect.top;
-        let dx = mouse.x - player.x, dy = mouse.y - player.y;
-        if(dx !== 0 || dy !== 0){
-          aimAngle = Math.atan2(dy, dx);
-        }
-      });
+      // Add mouse aiming only on non-touch devices
+      if (!("ontouchstart" in window)) {
+        canvas.addEventListener('mousemove', (e) => {
+          const rect = canvas.getBoundingClientRect();
+          mouse.x = e.clientX - rect.left;
+          mouse.y = e.clientY - rect.top;
+          let dx = mouse.x - player.x, dy = mouse.y - player.y;
+          if(dx !== 0 || dy !== 0){
+            aimAngle = Math.atan2(dy, dx);
+          }
+        });
+      }
       
-      // Only add the canvas click listener if the device does not support touch
+      // For non-touch devices, clicking the canvas fires a bullet.
       if (!("ontouchstart" in window)) {
         canvas.addEventListener('click', (e) => {
           e.preventDefault();
@@ -300,7 +301,7 @@
         moveKnob.style.left = (moveCenter.x + dx - moveKnob.offsetWidth / 2) + "px";
         moveKnob.style.top = (moveCenter.y + dy - moveKnob.offsetHeight / 2) + "px";
         moveVector = { x: dx, y: dy };
-        // Also update aimAngle based on the joystick direction if moved far enough
+        // On touch devices, update aim only if the joystick is moved far enough
         if(Math.hypot(dx, dy) > 5){
           aimAngle = Math.atan2(dy, dx);
         }
