@@ -76,7 +76,7 @@
       left: 0;
       width: 100%;
       z-index: 150;
-      pointer-events: none; /* Container itself won’t block touches */
+      /* Remove pointer-events: none so children work reliably */
     }
     /* Left Joystick (Movement & Aim) */
     #moveJoystick {
@@ -318,9 +318,12 @@
       // ----- Firing Bullet Function -----
       function fireBullet() {
         if (ammo > 0) {
+          // Spawn bullet at the edge of the player's circle along the aimAngle
+          const spawnX = player.x + Math.cos(aimAngle) * player.radius;
+          const spawnY = player.y + Math.sin(aimAngle) * player.radius;
           const bullet = {
-            x: player.x,
-            y: player.y,
+            x: spawnX,
+            y: spawnY,
             radius: 5,
             dx: Math.cos(aimAngle) * 7,
             dy: Math.sin(aimAngle) * 7
