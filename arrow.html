@@ -1,294 +1,567 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMCLT1ZWS7"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-CMCLT1ZWS7');
-    </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blaster</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f0f0f0;
-            overflow: hidden;
-        }
-        canvas {
-            display: block;
-            border: 2px solid #000;
-            margin: auto;
-        }
-        #score {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            font-weight: bold;
-            color: #222;
-            background: #ffffffaa;
-            padding: 10px 20px;
-            border-radius: 10px;
-            z-index: 10;
-        }
-        #controls {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            z-index: 10;
-        }
-        .control-btn {
-            width: 60px;
-            height: 60px;
-            background: #3498db;
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-        }
-        .control-btn:active {
-            background: #2980b9;
-        }
-
-        #rotate-message {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            color: #fff;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 20;
-        }
-
-        @media (orientation: portrait) {
-            #rotate-message {
-                display: block;
-            }
-            canvas,
-            #controls,
-            #score {
-                display: none;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>2D Free Fire Inspired Shooter with Animations, Sounds & Touch Controls</title>
+  <style>
+    /* Prevent text selection */
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+    }
+    canvas {
+      display: block;
+      background: #111;
+    }
+    /* Simple HUD overlay */
+    #hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 20px;
+      z-index: 100;
+      pointer-events: none;  /* Make sure clicks pass through HUD */
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+  </style>
 </head>
 <body>
-    <div id="score">Score: 0</div>
-    <div id="rotate-message">Please rotate your device to landscape mode to play.</div>
-    <canvas id="gameCanvas"></canvas>
+  <div id="hud">
+    Health: <span id="health">100</span> |
+    Ammo: <span id="ammo">30</span> |
+    Score: <span id="score">0</span>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+
+  <script>
+    // Get canvas and context
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Global game stats
+    let health = 100,
+        ammo = 30,
+        score = 0;
     
-    <div id="controls">
-        <button class="control-btn" id="up-btn">&#8593;</button>
-        <button class="control-btn" id="shoot-btn">&#x1F52B;</button>
-        <button class="control-btn" id="down-btn">&#8595;</button>
-    </div>
+    // Arrays to hold game objects
+    const bullets = [];
+    const enemyBullets = [];
+    const enemies = [];
+    const gifts = [];
+    const explosions = [];  // For explosion animations
 
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const rotateMessage = document.getElementById("rotate-message");
+    // Sound effects – ensure these files are in your project folder or update paths accordingly
+    const sounds = {
+      shoot: new Audio('shoot.mp3'),
+      enemyShoot: new Audio('shoot.mp3'),
+      gift: new Audio('gift.mp3'),
+      explosion: new Audio('explosion.mp3'),
+      gameover: new Audio('gameover.mp3')
+    };
 
-        // Function to check orientation and handle display
-        function checkOrientation() {
-            if (window.innerWidth < window.innerHeight) {
-                rotateMessage.style.display = "block";
-            } else {
-                rotateMessage.style.display = "none";
-            }
-        }
+    // Timing variable for delta time calculation
+    let lastTime = performance.now();
 
-        window.addEventListener("resize", () => {
-            checkOrientation();
-            resizeCanvas();
-        });
+    // Update HUD elements
+    function updateHUD() {
+      document.getElementById('health').textContent = health;
+      document.getElementById('ammo').textContent = ammo;
+      document.getElementById('score').textContent = score;
+    }
+    updateHUD();
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        
-        resizeCanvas();
-        checkOrientation();
+    // Player object (represented as a circle)
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      radius: 20,
+      speed: 3
+    };
 
-        const player = {
-            x: 100,
-            y: canvas.height / 2 - 20,
-            width: 40,
-            height: 40,
-            speed: 10,
-            color: '#3498db',
+    // Input management for keyboard (for desktop)
+    const keys = {};
+    document.addEventListener('keydown', (e) => {
+      keys[e.key.toLowerCase()] = true;
+      // Reload ammo when pressing 'r'
+      if (e.key.toLowerCase() === 'r') {
+        ammo = 30;
+        updateHUD();
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
+    });
+
+    // Mouse variables for aiming (desktop)
+    const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+    });
+
+    // Handle shooting on click (desktop)
+    canvas.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (ammo > 0) {
+        const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+        const bullet = {
+          x: player.x,
+          y: player.y,
+          radius: 5,
+          speed: 7,
+          dx: Math.cos(angle) * 7,
+          dy: Math.sin(angle) * 7
         };
+        bullets.push(bullet);
+        ammo--;
+        updateHUD();
+        sounds.shoot.currentTime = 0;
+        sounds.shoot.play();
+      }
+    });
 
-        let arrows = [];
-        let targets = [];
-        let score = 0;
-        let gameRunning = true;
-        let targetSpeed = 2;
+    // --- Touch Controls ---
+    // We'll use two touch objects: one for movement (left half) and one for aiming/shooting (right half)
+    let moveTouch = null;
+    let shootTouch = null;
 
-        class Arrow {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.width = 10;
-                this.height = 3;
-                this.color = '#333';
-            }
-
-            move() {
-                this.x += 7;
-            }
-
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-            }
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      for (let touch of e.changedTouches) {
+        // If touch is on left half, assign as movement control if not already assigned
+        if (touch.clientX < canvas.width / 2 && !moveTouch) {
+          moveTouch = {
+            id: touch.identifier,
+            startX: touch.clientX,
+            startY: touch.clientY,
+            currentX: touch.clientX,
+            currentY: touch.clientY
+          };
         }
-
-        class Target {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.width = 40;
-                this.height = 40;
-                this.color = 'green';
-                this.isHit = false;
-                this.hitAnimationFrame = 0;
-            }
-
-            move() {
-                if (!this.isHit) {
-                    this.x -= targetSpeed;
-                }
-            }
-
-            draw() {
-                if (this.isHit) {
-                    const alpha = 1 - this.hitAnimationFrame / 20;
-                    const radius = this.width / 2 * (1 + this.hitAnimationFrame / 10);
-                    ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
-                    ctx.beginPath();
-                    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, radius, 0, Math.PI * 2);
-                    ctx.fill();
-                    this.hitAnimationFrame++;
-                    if (this.hitAnimationFrame > 20) this.remove();
-                } else {
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-
-            remove() {
-                const index = targets.indexOf(this);
-                if (index !== -1) {
-                    targets.splice(index, 1);
-                }
-            }
+        // If touch is on right half, assign as shoot/aim control if not already assigned
+        else if (touch.clientX >= canvas.width / 2 && !shootTouch) {
+          shootTouch = {
+            id: touch.identifier,
+            startX: touch.clientX,
+            startY: touch.clientY,
+            currentX: touch.clientX,
+            currentY: touch.clientY
+          };
+          // Update aiming to current touch
+          mouse.x = touch.clientX;
+          mouse.y = touch.clientY;
         }
+      }
+    });
 
-        function drawPlayer() {
-            ctx.fillStyle = player.color;
-            ctx.beginPath();
-            ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width / 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = 'black';
-            ctx.fillRect(player.x + player.width, player.y + player.height / 2 - 5, 10, 10);
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      for (let touch of e.changedTouches) {
+        if (moveTouch && touch.identifier === moveTouch.id) {
+          moveTouch.currentX = touch.clientX;
+          moveTouch.currentY = touch.clientY;
         }
-
-        function gameLoop() {
-            if (!gameRunning) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPlayer();
-
-            arrows.forEach((arrow, i) => {
-                arrow.move();
-                arrow.draw();
-
-                targets.forEach((target) => {
-                    if (
-                        arrow.x < target.x + target.width &&
-                        arrow.x + arrow.width > target.x &&
-                        arrow.y < target.y + target.height &&
-                        arrow.y + arrow.height > target.y
-                    ) {
-                        target.isHit = true;
-                        arrows.splice(i, 1);
-                        score++;
-                        document.getElementById("score").textContent = `Score: ${score}`;
-                    }
-                });
-
-                if (arrow.x > canvas.width) arrows.splice(i, 1);
-            });
-
-            targets.forEach((target) => {
-                target.move();
-                target.draw();
-
-                if (target.x + target.width < 0) {
-                    gameRunning = false;
-                    document.getElementById("score").textContent = `Game Over! Final Score: ${score}`;
-                }
-            });
-
-            if (score > 0 && score % 10 === 0) targetSpeed += 0.1;
-            requestAnimationFrame(gameLoop);
+        if (shootTouch && touch.identifier === shootTouch.id) {
+          shootTouch.currentX = touch.clientX;
+          shootTouch.currentY = touch.clientY;
+          // Update aiming position
+          mouse.x = touch.clientX;
+          mouse.y = touch.clientY;
         }
+      }
+    });
 
-        const upBtn = document.getElementById("up-btn");
-        const downBtn = document.getElementById("down-btn");
-        const shootBtn = document.getElementById("shoot-btn");
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      for (let touch of e.changedTouches) {
+        // When the shoot touch ends, fire a bullet
+        if (shootTouch && touch.identifier === shootTouch.id) {
+          if (ammo > 0) {
+            const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+            const bullet = {
+              x: player.x,
+              y: player.y,
+              radius: 5,
+              speed: 7,
+              dx: Math.cos(angle) * 7,
+              dy: Math.sin(angle) * 7
+            };
+            bullets.push(bullet);
+            ammo--;
+            updateHUD();
+            sounds.shoot.currentTime = 0;
+            sounds.shoot.play();
+          }
+          shootTouch = null;
+        }
+        // Clear movement control if that touch ends
+        if (moveTouch && touch.identifier === moveTouch.id) {
+          moveTouch = null;
+        }
+      }
+    });
+    // --- End Touch Controls ---
 
-        upBtn.addEventListener("click", () => {
-            if (player.y > 0) player.y -= player.speed;
-        });
+    // Spawn an enemy at a random edge with a randomized shooting cooldown
+    function spawnEnemy() {
+      let x, y;
+      const edge = Math.floor(Math.random() * 4); // 0: top, 1: right, 2: bottom, 3: left
+      if (edge === 0) {
+        x = Math.random() * canvas.width;
+        y = -30;
+      } else if (edge === 1) {
+        x = canvas.width + 30;
+        y = Math.random() * canvas.height;
+      } else if (edge === 2) {
+        x = Math.random() * canvas.width;
+        y = canvas.height + 30;
+      } else {
+        x = -30;
+        y = Math.random() * canvas.height;
+      }
+      const enemy = {
+        x: x,
+        y: y,
+        radius: 20,
+        speed: 1.5,
+        shootCooldown: Math.random() * 3000 + 2000  // Random cooldown between 2 and 5 seconds
+      };
+      enemies.push(enemy);
+    }
 
-        downBtn.addEventListener("click", () => {
-            if (player.y < canvas.height - player.height) player.y += player.speed;
-        });
+    // Spawn a gift that increases ammo by 10 when collected
+    function spawnGift() {
+      const gift = {
+        x: Math.random() * (canvas.width - 100) + 50,
+        y: Math.random() * (canvas.height - 100) + 50,
+        radius: 15
+      };
+      gifts.push(gift);
+      // Remove gift after 10 seconds if not collected
+      setTimeout(() => {
+        const idx = gifts.indexOf(gift);
+        if (idx !== -1) gifts.splice(idx, 1);
+      }, 10000);
+    }
 
-        shootBtn.addEventListener("click", () => {
-            if (gameRunning) {
-                arrows.push(new Arrow(player.x + player.width + 10, player.y + player.height / 2 - 2));
-            }
-        });
+    // Create an explosion animation at (x, y)
+    function createExplosion(x, y) {
+      explosions.push({
+        x: x,
+        y: y,
+        radius: 0,
+        maxRadius: 40,
+        alpha: 1
+      });
+      sounds.explosion.currentTime = 0;
+      sounds.explosion.play();
+    }
 
-        setInterval(() => {
-            if (gameRunning) {
-                const y = Math.random() * (canvas.height - 40);
-                targets.push(new Target(canvas.width, y));
-            }
-        }, 2500);
+    // Update game objects
+    function update(dt) {
+      // --- Update player movement from keyboard ---
+      if (keys['w'] || keys['arrowup']) player.y -= player.speed;
+      if (keys['s'] || keys['arrowdown']) player.y += player.speed;
+      if (keys['a'] || keys['arrowleft']) player.x -= player.speed;
+      if (keys['d'] || keys['arrowright']) player.x += player.speed;
 
-        gameLoop();
-    </script>
+      // --- Update player movement from touch (virtual joystick) ---
+      if (moveTouch) {
+        let dx = moveTouch.currentX - moveTouch.startX;
+        let dy = moveTouch.currentY - moveTouch.startY;
+        let mag = Math.hypot(dx, dy);
+        // Only move if the touch has moved a minimal threshold
+        if (mag > 10) {
+          let normX = dx / mag;
+          let normY = dy / mag;
+          player.x += normX * player.speed;
+          player.y += normY * player.speed;
+        }
+      }
+
+      // Constrain player within the canvas
+      player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+      player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
+      // --- Update bullets ---
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const b = bullets[i];
+        b.x += b.dx;
+        b.y += b.dy;
+        if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
+          bullets.splice(i, 1);
+        }
+      }
+
+      // --- Update enemy bullets ---
+      for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const eb = enemyBullets[i];
+        eb.x += eb.dx;
+        eb.y += eb.dy;
+        if (eb.x < 0 || eb.x > canvas.width || eb.y < 0 || eb.y > canvas.height) {
+          enemyBullets.splice(i, 1);
+        } else {
+          const dist = Math.hypot(player.x - eb.x, player.y - eb.y);
+          if (dist < player.radius + eb.radius) {
+            enemyBullets.splice(i, 1);
+            createExplosion(player.x, player.y);
+            health = 0;
+            updateHUD();
+          }
+        }
+      }
+
+      // --- Update enemies ---
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+        enemy.x += Math.cos(angle) * enemy.speed;
+        enemy.y += Math.sin(angle) * enemy.speed;
+        enemy.shootCooldown -= dt;
+        if (enemy.shootCooldown <= 0) {
+          const bulletAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+          const enemyBullet = {
+            x: enemy.x,
+            y: enemy.y,
+            radius: 5,
+            speed: 5,
+            dx: Math.cos(bulletAngle) * 5,
+            dy: Math.sin(bulletAngle) * 5
+          };
+          enemyBullets.push(enemyBullet);
+          enemy.shootCooldown = Math.random() * 3000 + 2000;
+          sounds.enemyShoot.currentTime = 0;
+          sounds.enemyShoot.play();
+        }
+        const distToPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+        if (distToPlayer < player.radius + enemy.radius) {
+          createExplosion(enemy.x, enemy.y);
+          enemies.splice(i, 1);
+          health = 0;
+          updateHUD();
+        }
+      }
+
+      // --- Update gifts (check for collection) ---
+      for (let i = gifts.length - 1; i >= 0; i--) {
+        const gift = gifts[i];
+        const distToPlayer = Math.hypot(player.x - gift.x, player.y - gift.y);
+        if (distToPlayer < player.radius + gift.radius) {
+          ammo += 10;
+          score += 50;
+          updateHUD();
+          gifts.splice(i, 1);
+          sounds.gift.currentTime = 0;
+          sounds.gift.play();
+        }
+      }
+
+      // --- Check bullet-enemy collisions ---
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        for (let j = bullets.length - 1; j >= 0; j--) {
+          const bullet = bullets[j];
+          const dist = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
+          if (dist < enemy.radius + bullet.radius) {
+            createExplosion(enemy.x, enemy.y);
+            enemies.splice(i, 1);
+            bullets.splice(j, 1);
+            score += 100;
+            updateHUD();
+            break;
+          }
+        }
+      }
+
+      // --- Update explosion animations ---
+      for (let i = explosions.length - 1; i >= 0; i--) {
+        const exp = explosions[i];
+        exp.radius += 0.5 * (dt / 16);
+        exp.alpha -= 0.02 * (dt / 16);
+        if (exp.radius > exp.maxRadius || exp.alpha <= 0) {
+          explosions.splice(i, 1);
+        }
+      }
+    }
+
+    // Draw all game elements
+    function draw() {
+      // Dynamic background
+      const bgGradient = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, 100,
+        canvas.width / 2, canvas.height / 2, canvas.width
+      );
+      bgGradient.addColorStop(0, '#222');
+      bgGradient.addColorStop(1, '#111');
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Dashed aiming line
+      ctx.save();
+      ctx.setLineDash([10, 10]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(player.x, player.y);
+      ctx.lineTo(mouse.x, mouse.y);
+      ctx.stroke();
+      ctx.restore();
+
+      // Draw player with gradient and shadow
+      ctx.save();
+      const playerGradient = ctx.createRadialGradient(
+        player.x - player.radius / 2,
+        player.y - player.radius / 2,
+        player.radius / 4,
+        player.x,
+        player.y,
+        player.radius
+      );
+      playerGradient.addColorStop(0, '#00f');
+      playerGradient.addColorStop(1, '#003');
+      ctx.fillStyle = playerGradient;
+      ctx.shadowColor = 'rgba(0,0,255,0.7)';
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Draw bullets with glow
+      bullets.forEach(bullet => {
+        ctx.save();
+        const bulletGradient = ctx.createRadialGradient(
+          bullet.x, bullet.y, 0,
+          bullet.x, bullet.y, bullet.radius
+        );
+        bulletGradient.addColorStop(0, '#ff0');
+        bulletGradient.addColorStop(1, '#aa0');
+        ctx.fillStyle = bulletGradient;
+        ctx.shadowColor = 'rgba(255,255,0,0.8)';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Draw enemy bullets with glow
+      enemyBullets.forEach(eb => {
+        ctx.save();
+        const ebGradient = ctx.createRadialGradient(
+          eb.x, eb.y, 0,
+          eb.x, eb.y, eb.radius
+        );
+        ebGradient.addColorStop(0, '#f90');
+        ebGradient.addColorStop(1, '#a60');
+        ctx.fillStyle = ebGradient;
+        ctx.shadowColor = 'rgba(255,140,0,0.8)';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(eb.x, eb.y, eb.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Draw enemies with fiery glow
+      enemies.forEach(enemy => {
+        ctx.save();
+        const enemyGradient = ctx.createRadialGradient(
+          enemy.x, enemy.y, 0,
+          enemy.x, enemy.y, enemy.radius
+        );
+        enemyGradient.addColorStop(0, '#f00');
+        enemyGradient.addColorStop(1, '#600');
+        ctx.fillStyle = enemyGradient;
+        ctx.shadowColor = 'rgba(255,0,0,0.8)';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Draw gifts with a sparkling effect
+      gifts.forEach(gift => {
+        ctx.save();
+        const giftGradient = ctx.createRadialGradient(
+          gift.x, gift.y, 0,
+          gift.x, gift.y, gift.radius
+        );
+        giftGradient.addColorStop(0, '#0f0');
+        giftGradient.addColorStop(1, '#060');
+        ctx.fillStyle = giftGradient;
+        ctx.shadowColor = 'rgba(0,255,0,0.8)';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(gift.x, gift.y, gift.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Draw explosion animations
+      explosions.forEach(exp => {
+        ctx.save();
+        ctx.globalAlpha = exp.alpha;
+        ctx.fillStyle = 'orange';
+        ctx.beginPath();
+        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    // Main game loop
+    function gameLoop(currentTime) {
+      const dt = currentTime - lastTime;
+      lastTime = currentTime;
+      update(dt);
+      draw();
+      if (health > 0) {
+        requestAnimationFrame(gameLoop);
+      } else {
+        gameOver();
+      }
+    }
+
+    // Game over screen and sound
+    function gameOver() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'white';
+      ctx.font = '50px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
+      ctx.font = '30px Arial';
+      ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 50);
+      sounds.gameover.currentTime = 0;
+      sounds.gameover.play();
+    }
+
+    // Spawn enemies and gifts at intervals
+    setInterval(spawnEnemy, 2000);
+    setInterval(spawnGift, 10000);
+
+    // Start the game loop
+    requestAnimationFrame(gameLoop);
+
+    // Adjust canvas size when the window is resized
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
 </body>
 </html>
