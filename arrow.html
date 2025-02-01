@@ -5,6 +5,8 @@
   <!-- Disable zooming on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>2D Shooter with Fast Controls, Skill & High Scores</title>
+  <!-- Font Awesome CDN -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <style>
     /* Prevent text selection */
     * {
@@ -22,19 +24,36 @@
       display: block;
       background: #111;
     }
-    /* HUD styling */
-    #hud {
+    /* Stats Card Styling */
+    #statsCard {
       position: absolute;
       top: 10px;
-      left: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
       color: #fff;
+      padding: 15px 20px;
+      border-radius: 8px;
       font-family: Arial, sans-serif;
-      font-size: 18px;
-      z-index: 210;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+      z-index: 220;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     }
+    #statsCard .stat {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+    #statsCard .stat:last-child {
+      margin-bottom: 0;
+    }
+    #statsCard .stat i {
+      margin-right: 8px;
+      font-size: 20px;
+      color: #00aaff;
+    }
+    
     /* Start screen overlay */
-    #startScreen, #highScoreScreen {
+    #startScreen {
       position: absolute;
       top: 0;
       left: 0;
@@ -51,10 +70,10 @@
       text-align: center;
       padding: 20px;
     }
-    #startScreen.active, #highScoreScreen.active {
+    #startScreen.active {
       display: flex;
     }
-    #startScreen h1, #highScoreScreen h1 {
+    #startScreen h1 {
       font-size: 48px;
       margin-bottom: 20px;
     }
@@ -63,7 +82,7 @@
       margin-bottom: 30px;
       line-height: 1.5;
     }
-    #startScreen button, #highScoreScreen button {
+    #startScreen button {
       font-size: 24px;
       padding: 10px 20px;
       border: none;
@@ -142,13 +161,14 @@
   </style>
 </head>
 <body>
-  <!-- HUD -->
-  <div id="hud">
-    Health: <span id="health">100</span> |
-    Ammo: <span id="ammo">30</span> |
-    Score: <span id="score">0</span> |
-    Skill: <span id="skillCount">3</span>
+  <!-- Stats Card -->
+  <div id="statsCard">
+    <div class="stat"><i class="fas fa-heart"></i> <span id="health">100</span></div>
+    <div class="stat"><i class="fas fa-bolt"></i> <span id="ammo">30</span></div>
+    <div class="stat"><i class="fas fa-star"></i> <span id="score">0</span></div>
+    <div class="stat"><i class="fas fa-magic"></i> <span id="skillCount">3</span></div>
   </div>
+  
   <!-- Start screen overlay -->
   <div id="startScreen" class="active">
     <h1>2D Shooter</h1>
@@ -159,13 +179,6 @@
       Use the Skill button to fire bullets in every direction (3 sec cooldown, 3 uses).
     </p>
     <button id="startButton">Start Game</button>
-    <button id="showHighScores">High Scores</button>
-  </div>
-  <!-- High Score Screen -->
-  <div id="highScoreScreen">
-    <h1>High Scores</h1>
-    <div id="highScoreList"></div>
-    <button id="backButton">Back</button>
   </div>
   <canvas id="gameCanvas"></canvas>
   
@@ -223,7 +236,7 @@
       // Timing variable for delta time
       let lastTime = performance.now();
       
-      // Update HUD
+      // Update HUD (stats card)
       function updateHUD() {
         document.getElementById('health').textContent = health;
         document.getElementById('ammo').textContent = ammo;
@@ -429,64 +442,6 @@
         sounds.explosion.play();
       }
       
-      // ----- High Score Functions -----
-      const HIGH_SCORES_KEY = "highScores";
-      const MAX_HIGH_SCORES = 10;
-      
-      // Retrieve stored high scores (array of objects with name and score)
-      function getHighScores() {
-        const hs = localStorage.getItem(HIGH_SCORES_KEY);
-        return hs ? JSON.parse(hs) : [];
-      }
-      
-      // Save the high scores array back to localStorage
-      function saveHighScores(scores) {
-        localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(scores));
-      }
-      
-      // Attempt to save the current score if it qualifies
-      function trySaveHighScore(currentScore) {
-        let highScores = getHighScores();
-        // If less than MAX_HIGH_SCORES, or currentScore is higher than the lowest score
-        if (highScores.length < MAX_HIGH_SCORES || currentScore > highScores[highScores.length - 1].score) {
-          let name = prompt("New High Score! Enter your name:", "Player");
-          if (!name) name = "Anonymous";
-          // Insert in the right spot (sorted descending)
-          highScores.push({ name, score: currentScore });
-          highScores.sort((a, b) => b.score - a.score);
-          if (highScores.length > MAX_HIGH_SCORES) {
-            highScores = highScores.slice(0, MAX_HIGH_SCORES);
-          }
-          saveHighScores(highScores);
-        }
-      }
-      
-      // Display high scores in the High Score screen overlay
-      function showHighScores() {
-        const highScores = getHighScores();
-        const listDiv = document.getElementById('highScoreList');
-        listDiv.innerHTML = "";
-        if (highScores.length === 0) {
-          listDiv.innerHTML = "<p>No high scores yet.</p>";
-        } else {
-          const ul = document.createElement("ul");
-          ul.style.listStyle = "none";
-          highScores.forEach(entry => {
-            const li = document.createElement("li");
-            li.textContent = `${entry.name}: ${entry.score}`;
-            ul.appendChild(li);
-          });
-          listDiv.appendChild(ul);
-        }
-        // Show the high score overlay
-        document.getElementById('highScoreScreen').classList.add("active");
-      }
-      
-      // Hide high score screen
-      function hideHighScores() {
-        document.getElementById('highScoreScreen').classList.remove("active");
-      }
-      
       // ----- Game Objects Update -----
       function update(dt) {
         const factor = dt / 16;  // Scale factor
@@ -640,8 +595,9 @@
         ctx.stroke();
         ctx.restore();
         
-        // Draw player
+        // Draw player with a gun attached
         ctx.save();
+        // Draw the player body
         const pGrad = ctx.createRadialGradient(
           player.x - player.radius/2, player.y - player.radius/2,
           player.radius/4,
@@ -655,6 +611,12 @@
         ctx.beginPath();
         ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
         ctx.fill();
+        // Draw the gun for the player
+        ctx.translate(player.x, player.y);
+        ctx.rotate(aimAngle);
+        ctx.fillStyle = '#888';  // Gun color
+        // Draw a rectangle for the gun starting at the edge of the player
+        ctx.fillRect(player.radius, -5, player.radius + 10, 10);
         ctx.restore();
         
         // Draw bullets
@@ -693,12 +655,15 @@
           ctx.restore();
         });
         
-        // Draw enemies
+        // Draw enemies with guns attached
         enemies.forEach(enemy => {
           ctx.save();
+          // Translate to enemy's position
+          ctx.translate(enemy.x, enemy.y);
+          // Draw enemy body
           const eGrad = ctx.createRadialGradient(
-            enemy.x, enemy.y, 0,
-            enemy.x, enemy.y, enemy.radius
+            0, 0, enemy.radius/4,
+            0, 0, enemy.radius
           );
           eGrad.addColorStop(0, '#f00');
           eGrad.addColorStop(1, '#600');
@@ -706,8 +671,13 @@
           ctx.shadowColor = 'rgba(255,0,0,0.8)';
           ctx.shadowBlur = 20;
           ctx.beginPath();
-          ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+          ctx.arc(0, 0, enemy.radius, 0, Math.PI * 2);
           ctx.fill();
+          // Determine the angle towards the player for the gun
+          let enemyAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+          ctx.rotate(enemyAngle);
+          ctx.fillStyle = '#555'; // Gun color for enemy
+          ctx.fillRect(enemy.radius, -4, enemy.radius + 8, 8);
           ctx.restore();
         });
         
@@ -765,69 +735,7 @@
         ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 50);
         sounds.gameover.currentTime = 0;
         sounds.gameover.play();
-        // Check if the current score qualifies for high scores
-        trySaveHighScore(score);
-        // Show the start menu with high score option again
-        document.getElementById('startScreen').classList.add("active");
-      }
-      
-      // ----- High Score Functions -----
- 
-      
-      function getHighScores() {
-        const hs = localStorage.getItem(HIGH_SCORES_KEY);
-        return hs ? JSON.parse(hs) : [];
-      }
-      
-      function saveHighScores(scores) {
-        localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(scores));
-      }
-      
-      function trySaveHighScore(currentScore) {
-        let highScores = getHighScores();
-        if (highScores.length < MAX_HIGH_SCORES || currentScore > highScores[highScores.length - 1].score) {
-          let name = prompt("New High Score! Enter your name:", "Player");
-          if (!name) name = "Anonymous";
-          highScores.push({ name, score: currentScore });
-          highScores.sort((a, b) => b.score - a.score);
-          if (highScores.length > MAX_HIGH_SCORES) {
-            highScores = highScores.slice(0, MAX_HIGH_SCORES);
-          }
-          saveHighScores(highScores);
-        }
-      }
-      
-      // ----- High Score Screen Controls -----
-      document.getElementById('showHighScores').addEventListener('click', () => {
-        showHighScores();
-      });
-      document.getElementById('backButton').addEventListener('click', () => {
-        hideHighScores();
-      });
-      
-      function showHighScores() {
-        const highScores = getHighScores();
-        const listDiv = document.getElementById('highScoreList');
-        listDiv.innerHTML = "";
-        if (highScores.length === 0) {
-          listDiv.innerHTML = "<p>No high scores yet.</p>";
-        } else {
-          const ul = document.createElement("ul");
-          ul.style.listStyle = "none";
-          ul.style.padding = "0";
-          highScores.forEach(entry => {
-            const li = document.createElement("li");
-            li.textContent = `${entry.name}: ${entry.score}`;
-            ul.appendChild(li);
-          });
-          listDiv.appendChild(ul);
-        }
-        document.getElementById('highScoreScreen').classList.add("active");
-        document.getElementById('startScreen').classList.remove("active");
-      }
-      
-      function hideHighScores() {
-        document.getElementById('highScoreScreen').classList.remove("active");
+        // Show the start menu again.
         document.getElementById('startScreen').classList.add("active");
       }
       
@@ -865,9 +773,22 @@
       // ----- Start Game Button -----
       document.getElementById('startButton').addEventListener('click', () => {
         document.getElementById('startScreen').classList.remove("active");
-        // Reset game stats if needed
-        health = 100; ammo = 30; score = 0; skillCount = 3; skillReady = true;
+        // Reset game stats
+        health = 100; 
+        ammo = 30; 
+        score = 0; 
+        skillCount = 3; 
+        skillReady = true;
         updateHUD();
+        // Clear any remaining game objects
+        bullets.length = 0;
+        enemyBullets.length = 0;
+        enemies.length = 0;
+        gifts.length = 0;
+        explosions.length = 0;
+        // Reset player position
+        player.x = canvas.width / 2;
+        player.y = canvas.height / 2;
         lastTime = performance.now();
         requestAnimationFrame(gameLoop);
       });
