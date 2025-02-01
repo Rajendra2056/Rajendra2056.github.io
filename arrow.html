@@ -202,6 +202,9 @@
       // ----- Global Game Stats -----
       let health = 100, ammo = 30, grenades = 3, score = 0;
       
+      // IMPORTANT: Declare aimAngle as a global variable.
+      let aimAngle = -Math.PI/2;
+      
       // Arrays for game objects
       const bullets = [];
       const enemyBullets = [];
@@ -275,7 +278,6 @@
       const moveJoystick = document.getElementById('moveJoystick');
       const moveBase = document.getElementById('moveBase');
       const moveKnob = document.getElementById('moveKnob');
-      // Use clientWidth/Height to ensure proper dimensions
       const moveCenter = { x: moveBase.clientWidth / 2, y: moveBase.clientHeight / 2 };
       let moveActive = false, moveTouchId = null;
       let moveVector = { x: 0, y: 0 };
@@ -426,7 +428,7 @@
         }
       });
       
-      // ----- Utility: Desktop firing -----
+      // ----- Desktop Utility: Firing Bullet -----
       function fireBullet() {
         if (ammo > 0) {
           const bullet = {
