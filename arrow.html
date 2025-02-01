@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <!-- Disable zooming on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>2D Shooter with Virtual Joysticks</title>
+  <title>2D Shooter with Dual Joysticks & Grenades</title>
   <style>
     /* Prevent text selection */
     * {
@@ -22,50 +22,92 @@
       display: block;
       background: #111;
     }
-    /* Simple HUD overlay */
+    /* HUD styling */
     #hud {
       position: absolute;
       top: 10px;
       left: 10px;
       color: #fff;
       font-family: Arial, sans-serif;
-      font-size: 20px;
-      z-index: 100;
-      pointer-events: none;
+      font-size: 18px;
+      z-index: 200;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
-    /* Virtual control styling */
+    /* Start screen overlay */
+    #startScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    #startScreen h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    #startScreen p {
+      font-size: 20px;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+    #startScreen button {
+      font-size: 24px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #00aaff;
+      color: #fff;
+      cursor: pointer;
+    }
+    /* Virtual Controls Container */
     #controls {
       position: absolute;
       bottom: 20px;
       left: 0;
       width: 100%;
-      pointer-events: none; /* Container won’t block touches */
+      z-index: 150;
+      pointer-events: none; /* Container itself won’t block touches */
     }
-    /* Left Movement Pad */
-    #movePad {
+    /* Left (Movement) Joystick */
+    #moveJoystick {
       position: absolute;
       bottom: 20px;
       left: 20px;
+      width: 120px;
+      height: 120px;
       pointer-events: auto;
     }
-    .move-btn {
-      width: 60px;
-      height: 60px;
-      font-size: 24px;
-      margin: 5px;
-      opacity: 0.7;
-      border: none;
-      border-radius: 10px;
-      background: #444;
-      color: #fff;
+    #moveBase {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: rgba(100, 100, 100, 0.4);
+      border: 2px solid #888;
+      border-radius: 50%;
     }
-    #btn-row {
-      display: flex;
-      justify-content: center;
+    #moveKnob {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: rgba(0, 200, 0, 0.8);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      left: calc(50% - 25px);
+      top: calc(50% - 25px);
+      touch-action: none;
     }
-    /* Right Aim Joystick */
-    #aimPad {
+    /* Right (Aim) Joystick */
+    #aimJoystick {
       position: absolute;
       bottom: 20px;
       right: 20px;
@@ -92,88 +134,116 @@
       top: calc(50% - 25px);
       touch-action: none;
     }
+    /* Grenade Button */
+    #btnGrenade {
+      position: absolute;
+      bottom: 160px;
+      right: 30px;
+      width: 80px;
+      height: 80px;
+      border: none;
+      border-radius: 50%;
+      background: #aa0;
+      color: #fff;
+      font-size: 18px;
+      z-index: 150;
+      pointer-events: auto;
+    }
   </style>
 </head>
 <body>
+  <!-- HUD -->
   <div id="hud">
     Health: <span id="health">100</span> |
     Ammo: <span id="ammo">30</span> |
+    Grenades: <span id="grenades">3</span> |
     Score: <span id="score">0</span>
+  </div>
+  <!-- Start Screen Overlay -->
+  <div id="startScreen">
+    <h1>2D Shooter</h1>
+    <p>
+      Use the left joystick to move and the right joystick to aim.<br>
+      Drag the right joystick beyond the threshold and release to fire.<br>
+      Tap the grenade button to throw a grenade (projectile motion with gravity).<br>
+      Collect ammo and grenade pickups for bonuses.
+    </p>
+    <button id="startButton">Start Game</button>
   </div>
   <canvas id="gameCanvas"></canvas>
   
   <!-- Virtual Controls -->
   <div id="controls">
-    <!-- Left Movement Pad -->
-    <div id="movePad">
-      <button id="btn-up" class="move-btn">↑</button>
-      <div id="btn-row">
-        <button id="btn-left" class="move-btn">←</button>
-        <button id="btn-down" class="move-btn">↓</button>
-        <button id="btn-right" class="move-btn">→</button>
-      </div>
+    <!-- Left Joystick (Movement) -->
+    <div id="moveJoystick">
+      <div id="moveBase"></div>
+      <div id="moveKnob"></div>
     </div>
-    <!-- Right Aim Joystick -->
-    <div id="aimPad">
+    <!-- Right Joystick (Aiming) -->
+    <div id="aimJoystick">
       <div id="aimBase"></div>
       <div id="aimKnob"></div>
     </div>
+    <!-- Grenade Button -->
+    <button id="btnGrenade">Grenade</button>
   </div>
   
   <script>
-    // Get canvas and context
+    // ----- Canvas Setup -----
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
-    // Global game stats
-    let health = 100,
-        ammo = 30,
-        score = 0;
+    // ----- Global Game Stats -----
+    let health = 100, ammo = 30, grenades = 3, score = 0;
     
-    // Arrays to hold game objects
+    // Arrays for game objects
     const bullets = [];
     const enemyBullets = [];
     const enemies = [];
     const gifts = [];
-    const explosions = [];  // For explosion animations
+    const explosions = [];
+    const grenadesThrown = [];  // Grenade objects
     
-    // Sound effects – ensure these files are available or update the paths accordingly
+    // Sound effects (update file paths as needed)
     const sounds = {
       shoot: new Audio('shoot.mp3'),
       enemyShoot: new Audio('shoot.mp3'),
       gift: new Audio('gift.mp3'),
       explosion: new Audio('explosion.mp3'),
+      grenade: new Audio('grenade.mp3'),
       gameover: new Audio('gameover.mp3')
     };
     
-    // Timing variable for delta time calculation
+    // Timing variable for delta time
     let lastTime = performance.now();
     
-    // Update HUD elements
+    // Update HUD
     function updateHUD() {
       document.getElementById('health').textContent = health;
       document.getElementById('ammo').textContent = ammo;
+      document.getElementById('grenades').textContent = grenades;
       document.getElementById('score').textContent = score;
     }
     updateHUD();
     
-    // Player object (represented as a circle)
+    // ----- Player Object -----
     const player = {
       x: canvas.width / 2,
       y: canvas.height / 2,
       radius: 20,
-      speed: 3  // Base speed per 16ms frame (approximately 60 fps)
+      speed: 3  // Base speed per 16ms frame
     };
     
-    // --- Desktop Input Management ---
-    // Keyboard (for movement)
+    // ----- Input Management -----
+    // For desktop (keyboard and mouse)
     const keys = {};
     document.addEventListener('keydown', (e) => {
       keys[e.key.toLowerCase()] = true;
-      if (e.key.toLowerCase() === 'r') {
+      if(e.key.toLowerCase() === 'r'){
         ammo = 30;
+        grenades = 3;
         updateHUD();
       }
     });
@@ -181,15 +251,14 @@
       keys[e.key.toLowerCase()] = false;
     });
     
-    // Mouse for aiming (desktop)
-    const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+    const mouse = { x: canvas.width/2, y: canvas.height/2 };
     canvas.addEventListener('mousemove', (e) => {
       const rect = canvas.getBoundingClientRect();
       mouse.x = e.clientX - rect.left;
       mouse.y = e.clientY - rect.top;
-      let dx = mouse.x - player.x;
-      let dy = mouse.y - player.y;
-      if (dx !== 0 || dy !== 0) {
+      // Update aimAngle for desktop (if needed)
+      let dx = mouse.x - player.x, dy = mouse.y - player.y;
+      if(dx !== 0 || dy !== 0){
         aimAngle = Math.atan2(dy, dx);
       }
     });
@@ -198,91 +267,106 @@
       fireBullet();
     });
     
-    // --- Virtual Controls ---
-    // Movement flags for virtual buttons
-    let moveUp = false, moveDown = false, moveLeft = false, moveRight = false;
-    // Default aim angle (upward)
-    let aimAngle = -Math.PI / 2;
+    // ----- Virtual Joysticks -----
+    // Left Joystick (Movement)
+    const moveJoystick = document.getElementById('moveJoystick');
+    const moveBase = document.getElementById('moveBase');
+    const moveKnob = document.getElementById('moveKnob');
+    const moveCenter = { x: moveBase.offsetWidth/2, y: moveBase.offsetHeight/2 };
+    let moveActive = false, moveTouchId = null;
+    let moveVector = { x: 0, y: 0 };
+    function resetMoveKnob() {
+      moveKnob.style.left = (moveCenter.x - moveKnob.offsetWidth/2) + "px";
+      moveKnob.style.top = (moveCenter.y - moveKnob.offsetHeight/2) + "px";
+      moveVector = { x: 0, y: 0 };
+    }
+    resetMoveKnob();
     
-    // Utility function to fire a bullet in the current aim direction
-    function fireBullet() {
-      if (ammo > 0) {
-        const bullet = {
-          x: player.x,
-          y: player.y,
-          radius: 5,
-          // These are base speeds (per 16ms frame); update uses dt factor.
-          dx: Math.cos(aimAngle) * 7,
-          dy: Math.sin(aimAngle) * 7
-        };
-        bullets.push(bullet);
-        ammo--;
-        updateHUD();
-        sounds.shoot.currentTime = 0;
-        sounds.shoot.play();
+    moveJoystick.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if(e.changedTouches.length > 0){
+        const touch = e.changedTouches[0];
+        moveActive = true;
+        moveTouchId = touch.identifier;
+        updateMoveKnobPosition(touch.clientX, touch.clientY);
       }
+    });
+    moveJoystick.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      for(let touch of e.changedTouches){
+        if(touch.identifier === moveTouchId){
+          updateMoveKnobPosition(touch.clientX, touch.clientY);
+        }
+      }
+    });
+    moveJoystick.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      for(let touch of e.changedTouches){
+        if(touch.identifier === moveTouchId){
+          moveActive = false;
+          moveTouchId = null;
+          resetMoveKnob();
+        }
+      }
+    });
+    
+    function updateMoveKnobPosition(clientX, clientY) {
+      const rect = moveJoystick.getBoundingClientRect();
+      let localX = clientX - rect.left;
+      let localY = clientY - rect.top;
+      let dx = localX - moveCenter.x;
+      let dy = localY - moveCenter.y;
+      const maxDist = 40;
+      let dist = Math.hypot(dx, dy);
+      if(dist > maxDist){
+        const ratio = maxDist/dist;
+        dx *= ratio;
+        dy *= ratio;
+      }
+      moveKnob.style.left = (moveCenter.x + dx - moveKnob.offsetWidth/2) + "px";
+      moveKnob.style.top = (moveCenter.y + dy - moveKnob.offsetHeight/2) + "px";
+      moveVector = { x: dx, y: dy };
     }
     
-    // Virtual Movement Pad event listeners
-    function addVirtualButtonListeners(id, onDown, onUp) {
-      const btn = document.getElementById(id);
-      btn.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(); });
-      btn.addEventListener('touchend', (e) => { e.preventDefault(); onUp(); });
-      btn.addEventListener('mousedown', (e) => { onDown(); });
-      btn.addEventListener('mouseup', (e) => { onUp(); });
-      btn.addEventListener('mouseleave', (e) => { onUp(); });
-    }
-    
-    addVirtualButtonListeners('btn-up', () => { moveUp = true; }, () => { moveUp = false; });
-    addVirtualButtonListeners('btn-down', () => { moveDown = true; }, () => { moveDown = false; });
-    addVirtualButtonListeners('btn-left', () => { moveLeft = true; }, () => { moveLeft = false; });
-    addVirtualButtonListeners('btn-right', () => { moveRight = true; }, () => { moveRight = false; });
-    
-    // --- Virtual Aiming Joystick ---
-    const aimPad = document.getElementById('aimPad');
+    // Right Joystick (Aiming)
+    const aimJoystick = document.getElementById('aimJoystick');
+    const aimBase = document.getElementById('aimBase');
     const aimKnob = document.getElementById('aimKnob');
-    const aimPadRect = { width: 120, height: 120 };
-    // Center coordinates relative to the aimPad element
-    const aimCenter = { x: aimPadRect.width / 2, y: aimPadRect.height / 2 };
-    let aimActive = false; // whether the joystick is currently being used
-    let aimTouchId = null;
-    
+    const aimCenter = { x: aimBase.offsetWidth/2, y: aimBase.offsetHeight/2 };
+    let aimActive = false, aimTouchId = null;
+    let aimVector = { x: 0, y: 0 };
     function resetAimKnob() {
-      aimKnob.style.left = (aimCenter.x - aimKnob.offsetWidth / 2) + "px";
-      aimKnob.style.top = (aimCenter.y - aimKnob.offsetHeight / 2) + "px";
+      aimKnob.style.left = (aimCenter.x - aimKnob.offsetWidth/2) + "px";
+      aimKnob.style.top = (aimCenter.y - aimKnob.offsetHeight/2) + "px";
+      aimVector = { x: 0, y: 0 };
     }
-    
     resetAimKnob();
     
-    aimPad.addEventListener('touchstart', (e) => {
+    aimJoystick.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      if (e.changedTouches.length > 0) {
+      if(e.changedTouches.length > 0){
         const touch = e.changedTouches[0];
         aimActive = true;
         aimTouchId = touch.identifier;
         updateAimKnobPosition(touch.clientX, touch.clientY);
       }
     });
-    
-    aimPad.addEventListener('touchmove', (e) => {
+    aimJoystick.addEventListener('touchmove', (e) => {
       e.preventDefault();
-      for (let touch of e.changedTouches) {
-        if (touch.identifier === aimTouchId) {
+      for(let touch of e.changedTouches){
+        if(touch.identifier === aimTouchId){
           updateAimKnobPosition(touch.clientX, touch.clientY);
         }
       }
     });
-    
-    aimPad.addEventListener('touchend', (e) => {
+    aimJoystick.addEventListener('touchend', (e) => {
       e.preventDefault();
-      for (let touch of e.changedTouches) {
-        if (touch.identifier === aimTouchId) {
-          // On release, if the knob was dragged beyond a threshold, fire a bullet
-          const knobPos = getKnobPosition();
-          const dx = knobPos.x - aimCenter.x;
-          const dy = knobPos.y - aimCenter.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist > 20) {
+      for(let touch of e.changedTouches){
+        if(touch.identifier === aimTouchId){
+          // On release, if dragged beyond threshold, fire bullet
+          let dx = aimVector.x, dy = aimVector.y;
+          let dist = Math.hypot(dx, dy);
+          if(dist > 20){
             aimAngle = Math.atan2(dy, dx);
             fireBullet();
           }
@@ -293,107 +377,93 @@
       }
     });
     
-    // Helper: Convert clientX, clientY to aimPad coordinates and update knob position
     function updateAimKnobPosition(clientX, clientY) {
-      const rect = aimPad.getBoundingClientRect();
+      const rect = aimJoystick.getBoundingClientRect();
       let localX = clientX - rect.left;
       let localY = clientY - rect.top;
-      // Calculate displacement from center
       let dx = localX - aimCenter.x;
       let dy = localY - aimCenter.y;
-      // Limit knob movement to maximum radius (e.g., 40px)
       const maxDist = 40;
       let dist = Math.hypot(dx, dy);
-      if (dist > maxDist) {
-        const ratio = maxDist / dist;
+      if(dist > maxDist){
+        const ratio = maxDist/dist;
         dx *= ratio;
         dy *= ratio;
       }
-      const knobX = aimCenter.x + dx - aimKnob.offsetWidth / 2;
-      const knobY = aimCenter.y + dy - aimKnob.offsetHeight / 2;
-      aimKnob.style.left = knobX + "px";
-      aimKnob.style.top = knobY + "px";
-      // Update aim angle (relative to center)
-      if (dx !== 0 || dy !== 0) {
-        aimAngle = Math.atan2(dy, dx);
+      aimKnob.style.left = (aimCenter.x + dx - aimKnob.offsetWidth/2) + "px";
+      aimKnob.style.top = (aimCenter.y + dy - aimKnob.offsetHeight/2) + "px";
+      aimVector = { x: dx, y: dy };
+    }
+    
+    // ----- Grenade Mechanic -----
+    // Grenade objects: x, y, vx, vy, timer
+    // Simple projectile motion with gravity
+    const GRAVITY = 0.3;  // gravity factor per frame
+    
+    function throwGrenade() {
+      if (grenades > 0) {
+        // Use current aimAngle (from right joystick or desktop mouse)
+        const speed = 8; // initial grenade speed
+        const grenade = {
+          x: player.x,
+          y: player.y,
+          radius: 6,
+          vx: Math.cos(aimAngle) * speed,
+          vy: Math.sin(aimAngle) * speed,
+          timer: 2000  // explode after 2 seconds (ms)
+        };
+        grenadesThrown.push(grenade);
+        grenades--;
+        updateHUD();
+        sounds.grenade.currentTime = 0;
+        sounds.grenade.play();
       }
     }
     
-    function getKnobPosition() {
-      const left = parseFloat(aimKnob.style.left);
-      const top = parseFloat(aimKnob.style.top);
-      return { x: left + aimKnob.offsetWidth / 2, y: top + aimKnob.offsetHeight / 2 };
-    }
+    // Add event listener to grenade button
+    document.getElementById('btnGrenade').addEventListener('touchstart', (e) => { e.preventDefault(); throwGrenade(); });
+    document.getElementById('btnGrenade').addEventListener('click', (e) => { e.preventDefault(); throwGrenade(); });
     
-    // --- Spawn Functions ---
-    function spawnEnemy() {
-      let x, y;
-      const edge = Math.floor(Math.random() * 4);
-      if (edge === 0) { x = Math.random() * canvas.width; y = -30; }
-      else if (edge === 1) { x = canvas.width + 30; y = Math.random() * canvas.height; }
-      else if (edge === 2) { x = Math.random() * canvas.width; y = canvas.height + 30; }
-      else { x = -30; y = Math.random() * canvas.height; }
-      const enemy = {
-        x: x,
-        y: y,
-        radius: 20,
-        speed: 1.5,  // Base enemy speed per 16ms frame
-        shootCooldown: Math.random() * 3000 + 2000
-      };
-      enemies.push(enemy);
-    }
+    // ----- Desktop UI: also allow keyboard for grenade (e.g., pressing "g")
+    document.addEventListener('keydown', (e) => {
+      if(e.key.toLowerCase() === 'g'){
+        throwGrenade();
+      }
+    });
     
-    function spawnGift() {
-      const gift = {
-        x: Math.random() * (canvas.width - 100) + 50,
-        y: Math.random() * (canvas.height - 100) + 50,
-        radius: 15
-      };
-      gifts.push(gift);
-      setTimeout(() => {
-        const idx = gifts.indexOf(gift);
-        if (idx !== -1) gifts.splice(idx, 1);
-      }, 10000);
-    }
-    
-    function createExplosion(x, y) {
-      explosions.push({
-        x: x,
-        y: y,
-        radius: 0,
-        maxRadius: 40,
-        alpha: 1
-      });
-      sounds.explosion.currentTime = 0;
-      sounds.explosion.play();
-    }
-    
-    // --- Update Function ---
+    // ----- Game Objects Update -----
     function update(dt) {
-      // Use a scaling factor based on a 16ms "frame" (approx. 60 fps)
-      const factor = dt / 16;
+      const factor = dt / 16;  // scale factor
       
-      // Update movement from both keyboard and virtual buttons
-      let dx = 0, dy = 0;
-      if (keys['w'] || keys['arrowup'] || moveUp) dy -= 1;
-      if (keys['s'] || keys['arrowdown'] || moveDown) dy += 1;
-      if (keys['a'] || keys['arrowleft'] || moveLeft) dx -= 1;
-      if (keys['d'] || keys['arrowright'] || moveRight) dx += 1;
-      if (dx !== 0 || dy !== 0) {
-        let mag = Math.hypot(dx, dy);
-        dx /= mag;
-        dy /= mag;
-        // Optionally update aimAngle based on movement if not using joystick
-        aimAngle = Math.atan2(dy, dx);
-        player.x += dx * player.speed * factor;
-        player.y += dy * player.speed * factor;
+      // Update movement using virtual joystick (left joystick) OR keyboard
+      let mvx = 0, mvy = 0;
+      // From virtual joystick:
+      if (moveActive) {
+        mvx += moveVector.x / 40; // normalized (maxDist is 40)
+        mvy += moveVector.y / 40;
       }
-    
-      // Constrain player within canvas bounds
+      // From keyboard:
+      if (keys['w'] || keys['arrowup']) mvy -= 1;
+      if (keys['s'] || keys['arrowdown']) mvy += 1;
+      if (keys['a'] || keys['arrowleft']) mvx -= 1;
+      if (keys['d'] || keys['arrowright']) mvx += 1;
+      if (mvx !== 0 || mvy !== 0) {
+        const mag = Math.hypot(mvx, mvy);
+        mvx /= mag;
+        mvy /= mag;
+        // Optionally update aimAngle if not using aim joystick:
+        if (!aimActive) {
+          aimAngle = Math.atan2(mvy, mvx);
+        }
+        player.x += mvx * player.speed * factor;
+        player.y += mvy * player.speed * factor;
+      }
+      
+      // Constrain player within canvas
       player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
       player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
-    
-      // --- Update bullets ---
+      
+      // Update bullets
       for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         b.x += b.dx * factor;
@@ -401,8 +471,8 @@
         if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height)
           bullets.splice(i, 1);
       }
-    
-      // --- Update enemy bullets ---
+      
+      // Update enemy bullets
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const eb = enemyBullets[i];
         eb.x += eb.dx * factor;
@@ -419,8 +489,8 @@
           }
         }
       }
-    
-      // --- Update enemies ---
+      
+      // Update enemies
       for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
         const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
@@ -449,12 +519,12 @@
           updateHUD();
         }
       }
-    
-      // --- Update gifts ---
+      
+      // Update gifts
       for (let i = gifts.length - 1; i >= 0; i--) {
         const gift = gifts[i];
-        const distToPlayer = Math.hypot(player.x - gift.x, player.y - gift.y);
-        if (distToPlayer < player.radius + gift.radius) {
+        const dist = Math.hypot(player.x - gift.x, player.y - gift.y);
+        if (dist < player.radius + gift.radius) {
           ammo += 10;
           score += 50;
           updateHUD();
@@ -463,8 +533,8 @@
           sounds.gift.play();
         }
       }
-    
-      // --- Check bullet-enemy collisions ---
+      
+      // Check bullet-enemy collisions
       for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
         for (let j = bullets.length - 1; j >= 0; j--) {
@@ -480,8 +550,23 @@
           }
         }
       }
-    
-      // --- Update explosion animations ---
+      
+      // Update grenades (projectile motion)
+      for (let i = grenadesThrown.length - 1; i >= 0; i--) {
+        const gr = grenadesThrown[i];
+        // Update velocity with gravity (only affects vy)
+        gr.vy += GRAVITY * factor;
+        gr.x += gr.vx * factor;
+        gr.y += gr.vy * factor;
+        gr.timer -= dt;
+        // If timer expires, explode the grenade
+        if (gr.timer <= 0) {
+          createExplosion(gr.x, gr.y);
+          grenadesThrown.splice(i, 1);
+        }
+      }
+      
+      // Update explosion animations
       for (let i = explosions.length - 1; i >= 0; i--) {
         const exp = explosions[i];
         exp.radius += 0.5 * factor;
@@ -491,19 +576,19 @@
       }
     }
     
-    // --- Draw Function ---
+    // ----- Draw Function -----
     function draw() {
       // Dynamic background
       const bgGradient = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, 100,
-        canvas.width / 2, canvas.height / 2, canvas.width
+        canvas.width/2, canvas.height/2, 100,
+        canvas.width/2, canvas.height/2, canvas.width
       );
       bgGradient.addColorStop(0, '#222');
       bgGradient.addColorStop(1, '#111');
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-      // Draw dashed aiming line using current aimAngle
+      
+      // Dashed aiming line (from player using aimAngle)
       ctx.save();
       ctx.setLineDash([10, 10]);
       ctx.strokeStyle = 'rgba(255,255,255,0.3)';
@@ -511,142 +596,192 @@
       ctx.beginPath();
       ctx.moveTo(player.x, player.y);
       const aimLength = 100;
-      const aimX = player.x + Math.cos(aimAngle) * aimLength;
-      const aimY = player.y + Math.sin(aimAngle) * aimLength;
-      ctx.lineTo(aimX, aimY);
+      const ax = player.x + Math.cos(aimAngle) * aimLength;
+      const ay = player.y + Math.sin(aimAngle) * aimLength;
+      ctx.lineTo(ax, ay);
       ctx.stroke();
       ctx.restore();
-    
+      
       // Draw player with gradient and shadow
       ctx.save();
-      const playerGradient = ctx.createRadialGradient(
-        player.x - player.radius / 2, player.y - player.radius / 2,
-        player.radius / 4,
+      const pGrad = ctx.createRadialGradient(
+        player.x - player.radius/2, player.y - player.radius/2,
+        player.radius/4,
         player.x, player.y, player.radius
       );
-      playerGradient.addColorStop(0, '#00f');
-      playerGradient.addColorStop(1, '#003');
-      ctx.fillStyle = playerGradient;
+      pGrad.addColorStop(0, '#00f');
+      pGrad.addColorStop(1, '#003');
+      ctx.fillStyle = pGrad;
       ctx.shadowColor = 'rgba(0,0,255,0.7)';
       ctx.shadowBlur = 20;
       ctx.beginPath();
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
       ctx.fill();
       ctx.restore();
-    
+      
       // Draw bullets with glow
       bullets.forEach(bullet => {
         ctx.save();
-        const bulletGradient = ctx.createRadialGradient(
+        const bGrad = ctx.createRadialGradient(
           bullet.x, bullet.y, 0,
           bullet.x, bullet.y, 5
         );
-        bulletGradient.addColorStop(0, '#ff0');
-        bulletGradient.addColorStop(1, '#aa0');
-        ctx.fillStyle = bulletGradient;
+        bGrad.addColorStop(0, '#ff0');
+        bGrad.addColorStop(1, '#aa0');
+        ctx.fillStyle = bGrad;
         ctx.shadowColor = 'rgba(255,255,0,0.8)';
         ctx.shadowBlur = 10;
         ctx.beginPath();
-        ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+        ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
       });
-    
+      
       // Draw enemy bullets with glow
       enemyBullets.forEach(eb => {
         ctx.save();
-        const ebGradient = ctx.createRadialGradient(
+        const ebGrad = ctx.createRadialGradient(
           eb.x, eb.y, 0,
           eb.x, eb.y, eb.radius
         );
-        ebGradient.addColorStop(0, '#f90');
-        ebGradient.addColorStop(1, '#a60');
-        ctx.fillStyle = ebGradient;
+        ebGrad.addColorStop(0, '#f90');
+        ebGrad.addColorStop(1, '#a60');
+        ctx.fillStyle = ebGrad;
         ctx.shadowColor = 'rgba(255,140,0,0.8)';
         ctx.shadowBlur = 10;
         ctx.beginPath();
-        ctx.arc(eb.x, eb.y, eb.radius, 0, Math.PI * 2);
+        ctx.arc(eb.x, eb.y, eb.radius, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
       });
-    
+      
       // Draw enemies with fiery glow
       enemies.forEach(enemy => {
         ctx.save();
-        const enemyGradient = ctx.createRadialGradient(
+        const eGrad = ctx.createRadialGradient(
           enemy.x, enemy.y, 0,
           enemy.x, enemy.y, enemy.radius
         );
-        enemyGradient.addColorStop(0, '#f00');
-        enemyGradient.addColorStop(1, '#600');
-        ctx.fillStyle = enemyGradient;
+        eGrad.addColorStop(0, '#f00');
+        eGrad.addColorStop(1, '#600');
+        ctx.fillStyle = eGrad;
         ctx.shadowColor = 'rgba(255,0,0,0.8)';
         ctx.shadowBlur = 20;
         ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+        ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
       });
-    
-      // Draw gifts with a sparkling effect
+      
+      // Draw gifts with sparkling effect
       gifts.forEach(gift => {
         ctx.save();
-        const giftGradient = ctx.createRadialGradient(
+        const gGrad = ctx.createRadialGradient(
           gift.x, gift.y, 0,
           gift.x, gift.y, gift.radius
         );
-        giftGradient.addColorStop(0, '#0f0');
-        giftGradient.addColorStop(1, '#060');
-        ctx.fillStyle = giftGradient;
+        gGrad.addColorStop(0, '#0f0');
+        gGrad.addColorStop(1, '#060');
+        ctx.fillStyle = gGrad;
         ctx.shadowColor = 'rgba(0,255,0,0.8)';
         ctx.shadowBlur = 15;
         ctx.beginPath();
-        ctx.arc(gift.x, gift.y, gift.radius, 0, Math.PI * 2);
+        ctx.arc(gift.x, gift.y, gift.radius, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
       });
-    
+      
+      // Draw grenades (projectile) with a distinct look
+      grenadesThrown.forEach(gr => {
+        ctx.save();
+        ctx.fillStyle = '#ffa500';
+        ctx.beginPath();
+        ctx.arc(gr.x, gr.y, gr.radius, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      });
+      
       // Draw explosion animations
       explosions.forEach(exp => {
         ctx.save();
         ctx.globalAlpha = exp.alpha;
         ctx.fillStyle = 'orange';
         ctx.beginPath();
-        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
       });
     }
     
-    // --- Main Game Loop ---
+    // ----- Main Game Loop -----
     function gameLoop(currentTime) {
       const dt = currentTime - lastTime;
       lastTime = currentTime;
       update(dt);
       draw();
-      if (health > 0)
-        requestAnimationFrame(gameLoop);
-      else
-        gameOver();
+      if (health > 0) requestAnimationFrame(gameLoop);
+      else gameOver();
     }
     
     function gameOver() {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = 'rgba(0,0,0,0.8)';
+      ctx.fillRect(0,0,canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
       ctx.font = '50px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
+      ctx.fillText("Game Over", canvas.width/2, canvas.height/2);
       ctx.font = '30px Arial';
-      ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 50);
+      ctx.fillText("Score: " + score, canvas.width/2, canvas.height/2 + 50);
       sounds.gameover.currentTime = 0;
       sounds.gameover.play();
     }
     
+    // ----- Spawn Functions -----
+    function spawnEnemy() {
+      let x, y;
+      const edge = Math.floor(Math.random() * 4);
+      if (edge === 0) { x = Math.random() * canvas.width; y = -30; }
+      else if (edge === 1) { x = canvas.width + 30; y = Math.random() * canvas.height; }
+      else if (edge === 2) { x = Math.random() * canvas.width; y = canvas.height + 30; }
+      else { x = -30; y = Math.random() * canvas.height; }
+      const enemy = {
+        x: x,
+        y: y,
+        radius: 20,
+        speed: 1.5,
+        shootCooldown: Math.random() * 3000 + 2000
+      };
+      enemies.push(enemy);
+    }
+    
+    function spawnGift() {
+      const gift = {
+        x: Math.random() * (canvas.width - 100) + 50,
+        y: Math.random() * (canvas.height - 100) + 50,
+        radius: 15
+      };
+      gifts.push(gift);
+      setTimeout(() => {
+        const idx = gifts.indexOf(gift);
+        if (idx !== -1) gifts.splice(idx, 1);
+      }, 10000);
+    }
+    
+    // ----- Start Game Button -----
+    document.getElementById('startButton').addEventListener('click', () => {
+      document.getElementById('startScreen').style.display = 'none';
+      // Reset game stats if needed
+      health = 100; ammo = 30; grenades = 3; score = 0;
+      updateHUD();
+      lastTime = performance.now();
+      requestAnimationFrame(gameLoop);
+    });
+    
+    // ----- Periodic Spawning -----
     setInterval(spawnEnemy, 2000);
     setInterval(spawnGift, 10000);
-    requestAnimationFrame(gameLoop);
     
+    // Adjust canvas size on window resize
     window.addEventListener('resize', () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
