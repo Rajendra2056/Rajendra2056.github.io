@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>2D Free Fire Inspired Shooter with Animations, Sounds & Touch Controls</title>
+  <title>2D Free Fire Inspired Shooter with Virtual Buttons</title>
   <style>
     /* Prevent text selection */
     * {
@@ -29,8 +29,51 @@
       font-family: Arial, sans-serif;
       font-size: 20px;
       z-index: 100;
-      pointer-events: none;  /* Make sure clicks pass through HUD */
+      pointer-events: none;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+    /* Virtual control styling */
+    #controls {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      pointer-events: none; /* Container won’t block touches */
+    }
+    #movePad {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      pointer-events: auto;
+    }
+    .move-btn {
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      margin: 5px;
+      opacity: 0.7;
+      border: none;
+      border-radius: 10px;
+      background: #444;
+      color: #fff;
+    }
+    #btn-row {
+      display: flex;
+      justify-content: center;
+    }
+    #shootButton {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 80px;
+      height: 80px;
+      font-size: 20px;
+      border: none;
+      border-radius: 50%;
+      pointer-events: auto;
+      opacity: 0.8;
+      background: #b00;
+      color: #fff;
     }
   </style>
 </head>
@@ -41,6 +84,19 @@
     Score: <span id="score">0</span>
   </div>
   <canvas id="gameCanvas"></canvas>
+  
+  <!-- Virtual Controls -->
+  <div id="controls">
+    <div id="movePad">
+      <button id="btn-up" class="move-btn">↑</button>
+      <div id="btn-row">
+        <button id="btn-left" class="move-btn">←</button>
+        <button id="btn-down" class="move-btn">↓</button>
+        <button id="btn-right" class="move-btn">→</button>
+      </div>
+    </div>
+    <button id="shootButton">Shoot</button>
+  </div>
 
   <script>
     // Get canvas and context
@@ -89,7 +145,8 @@
       speed: 3
     };
 
-    // Input management for keyboard (for desktop)
+    // --- Desktop Input Management ---
+    // Keyboard (for movement)
     const keys = {};
     document.addEventListener('keydown', (e) => {
       keys[e.key.toLowerCase()] = true;
@@ -103,26 +160,41 @@
       keys[e.key.toLowerCase()] = false;
     });
 
-    // Mouse variables for aiming (desktop)
+    // Mouse for aiming (desktop)
     const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
     canvas.addEventListener('mousemove', (e) => {
       const rect = canvas.getBoundingClientRect();
       mouse.x = e.clientX - rect.left;
       mouse.y = e.clientY - rect.top;
+      // Update aim direction based on mouse position relative to player
+      let dx = mouse.x - player.x;
+      let dy = mouse.y - player.y;
+      if (dx !== 0 || dy !== 0) {
+        aimAngle = Math.atan2(dy, dx);
+      }
     });
-
     // Handle shooting on click (desktop)
     canvas.addEventListener('click', (e) => {
       e.preventDefault();
+      fireBullet();
+    });
+
+    // --- Virtual Button Controls ---
+    // Movement flags for virtual buttons
+    let moveUp = false, moveDown = false, moveLeft = false, moveRight = false;
+    // Default aiming angle (upward)
+    let aimAngle = -Math.PI / 2;
+
+    // Utility function to fire a bullet in the current aim direction
+    function fireBullet() {
       if (ammo > 0) {
-        const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
         const bullet = {
           x: player.x,
           y: player.y,
           radius: 5,
           speed: 7,
-          dx: Math.cos(angle) * 7,
-          dy: Math.sin(angle) * 7
+          dx: Math.cos(aimAngle) * 7,
+          dy: Math.sin(aimAngle) * 7
         };
         bullets.push(bullet);
         ammo--;
@@ -130,91 +202,29 @@
         sounds.shoot.currentTime = 0;
         sounds.shoot.play();
       }
-    });
+    }
 
-    // --- Touch Controls ---
-    // We'll use two touch objects: one for movement (left half) and one for aiming/shooting (right half)
-    let moveTouch = null;
-    let shootTouch = null;
+    // Add event listeners to virtual movement buttons
+    function addVirtualButtonListeners(id, onDown, onUp) {
+      const btn = document.getElementById(id);
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(); });
+      btn.addEventListener('touchend', (e) => { e.preventDefault(); onUp(); });
+      btn.addEventListener('mousedown', (e) => { onDown(); });
+      btn.addEventListener('mouseup', (e) => { onUp(); });
+      btn.addEventListener('mouseleave', (e) => { onUp(); });
+    }
 
-    canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      for (let touch of e.changedTouches) {
-        // If touch is on left half, assign as movement control if not already assigned
-        if (touch.clientX < canvas.width / 2 && !moveTouch) {
-          moveTouch = {
-            id: touch.identifier,
-            startX: touch.clientX,
-            startY: touch.clientY,
-            currentX: touch.clientX,
-            currentY: touch.clientY
-          };
-        }
-        // If touch is on right half, assign as shoot/aim control if not already assigned
-        else if (touch.clientX >= canvas.width / 2 && !shootTouch) {
-          shootTouch = {
-            id: touch.identifier,
-            startX: touch.clientX,
-            startY: touch.clientY,
-            currentX: touch.clientX,
-            currentY: touch.clientY
-          };
-          // Update aiming to current touch
-          mouse.x = touch.clientX;
-          mouse.y = touch.clientY;
-        }
-      }
-    });
+    addVirtualButtonListeners('btn-up', () => { moveUp = true; }, () => { moveUp = false; });
+    addVirtualButtonListeners('btn-down', () => { moveDown = true; }, () => { moveDown = false; });
+    addVirtualButtonListeners('btn-left', () => { moveLeft = true; }, () => { moveLeft = false; });
+    addVirtualButtonListeners('btn-right', () => { moveRight = true; }, () => { moveRight = false; });
 
-    canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      for (let touch of e.changedTouches) {
-        if (moveTouch && touch.identifier === moveTouch.id) {
-          moveTouch.currentX = touch.clientX;
-          moveTouch.currentY = touch.clientY;
-        }
-        if (shootTouch && touch.identifier === shootTouch.id) {
-          shootTouch.currentX = touch.clientX;
-          shootTouch.currentY = touch.clientY;
-          // Update aiming position
-          mouse.x = touch.clientX;
-          mouse.y = touch.clientY;
-        }
-      }
-    });
+    // Add listener for the shoot button
+    const shootButton = document.getElementById('shootButton');
+    shootButton.addEventListener('touchstart', (e) => { e.preventDefault(); fireBullet(); });
+    shootButton.addEventListener('click', (e) => { e.preventDefault(); fireBullet(); });
 
-    canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      for (let touch of e.changedTouches) {
-        // When the shoot touch ends, fire a bullet
-        if (shootTouch && touch.identifier === shootTouch.id) {
-          if (ammo > 0) {
-            const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
-            const bullet = {
-              x: player.x,
-              y: player.y,
-              radius: 5,
-              speed: 7,
-              dx: Math.cos(angle) * 7,
-              dy: Math.sin(angle) * 7
-            };
-            bullets.push(bullet);
-            ammo--;
-            updateHUD();
-            sounds.shoot.currentTime = 0;
-            sounds.shoot.play();
-          }
-          shootTouch = null;
-        }
-        // Clear movement control if that touch ends
-        if (moveTouch && touch.identifier === moveTouch.id) {
-          moveTouch = null;
-        }
-      }
-    });
-    // --- End Touch Controls ---
-
-    // Spawn an enemy at a random edge with a randomized shooting cooldown
+    // --- Spawn Functions ---
     function spawnEnemy() {
       let x, y;
       const edge = Math.floor(Math.random() * 4); // 0: top, 1: right, 2: bottom, 3: left
@@ -241,7 +251,6 @@
       enemies.push(enemy);
     }
 
-    // Spawn a gift that increases ammo by 10 when collected
     function spawnGift() {
       const gift = {
         x: Math.random() * (canvas.width - 100) + 50,
@@ -249,14 +258,12 @@
         radius: 15
       };
       gifts.push(gift);
-      // Remove gift after 10 seconds if not collected
       setTimeout(() => {
         const idx = gifts.indexOf(gift);
         if (idx !== -1) gifts.splice(idx, 1);
       }, 10000);
     }
 
-    // Create an explosion animation at (x, y)
     function createExplosion(x, y) {
       explosions.push({
         x: x,
@@ -269,26 +276,22 @@
       sounds.explosion.play();
     }
 
-    // Update game objects
+    // --- Update Function ---
     function update(dt) {
-      // --- Update player movement from keyboard ---
-      if (keys['w'] || keys['arrowup']) player.y -= player.speed;
-      if (keys['s'] || keys['arrowdown']) player.y += player.speed;
-      if (keys['a'] || keys['arrowleft']) player.x -= player.speed;
-      if (keys['d'] || keys['arrowright']) player.x += player.speed;
-
-      // --- Update player movement from touch (virtual joystick) ---
-      if (moveTouch) {
-        let dx = moveTouch.currentX - moveTouch.startX;
-        let dy = moveTouch.currentY - moveTouch.startY;
+      // --- Update movement from both keyboard and virtual buttons ---
+      let dx = 0, dy = 0;
+      if (keys['w'] || keys['arrowup'] || moveUp) dy -= 1;
+      if (keys['s'] || keys['arrowdown'] || moveDown) dy += 1;
+      if (keys['a'] || keys['arrowleft'] || moveLeft) dx -= 1;
+      if (keys['d'] || keys['arrowright'] || moveRight) dx += 1;
+      if (dx !== 0 || dy !== 0) {
         let mag = Math.hypot(dx, dy);
-        // Only move if the touch has moved a minimal threshold
-        if (mag > 10) {
-          let normX = dx / mag;
-          let normY = dy / mag;
-          player.x += normX * player.speed;
-          player.y += normY * player.speed;
-        }
+        dx /= mag;
+        dy /= mag;
+        // Update aim direction based on movement (if any)
+        aimAngle = Math.atan2(dy, dx);
+        player.x += dx * player.speed;
+        player.y += dy * player.speed;
       }
 
       // Constrain player within the canvas
@@ -354,7 +357,7 @@
         }
       }
 
-      // --- Update gifts (check for collection) ---
+      // --- Update gifts ---
       for (let i = gifts.length - 1; i >= 0; i--) {
         const gift = gifts[i];
         const distToPlayer = Math.hypot(player.x - gift.x, player.y - gift.y);
@@ -396,7 +399,7 @@
       }
     }
 
-    // Draw all game elements
+    // --- Draw Function ---
     function draw() {
       // Dynamic background
       const bgGradient = ctx.createRadialGradient(
@@ -408,14 +411,17 @@
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Dashed aiming line
+      // Draw dashed aiming line using current aimAngle
       ctx.save();
       ctx.setLineDash([10, 10]);
       ctx.strokeStyle = 'rgba(255,255,255,0.3)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(player.x, player.y);
-      ctx.lineTo(mouse.x, mouse.y);
+      const aimLength = 100;
+      const aimX = player.x + Math.cos(aimAngle) * aimLength;
+      const aimY = player.y + Math.sin(aimAngle) * aimLength;
+      ctx.lineTo(aimX, aimY);
       ctx.stroke();
       ctx.restore();
 
@@ -523,7 +529,7 @@
       });
     }
 
-    // Main game loop
+    // --- Main Game Loop ---
     function gameLoop(currentTime) {
       const dt = currentTime - lastTime;
       lastTime = currentTime;
