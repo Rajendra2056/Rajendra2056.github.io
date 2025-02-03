@@ -22,7 +22,6 @@
     }
     canvas {
       display: block;
-      background: #111;
     }
     /* Stats Card Styling */
     #statsCard {
@@ -51,7 +50,6 @@
       font-size: 20px;
       color: #00aaff;
     }
-    
     /* Start screen overlay */
     #startScreen {
       position: absolute;
@@ -167,6 +165,8 @@
     <div class="stat"><i class="fas fa-bolt"></i> <span id="ammo">30</span></div>
     <div class="stat"><i class="fas fa-star"></i> <span id="score">0</span></div>
     <div class="stat"><i class="fas fa-magic"></i> <span id="skillCount">3</span></div>
+    <div class="stat"><i class="fas fa-level-up-alt"></i> <span id="level">1</span></div>
+    <div class="stat"><i class="fas fa-fire"></i> <span id="combo">x1</span></div>
   </div>
   
   <!-- Start screen overlay -->
@@ -176,7 +176,8 @@
       Use the left joystick (or WASD/arrow keys) to move and set your aim.<br>
       Tap the shoot button to fire a bullet in the aim direction.<br>
       On non-touch devices you can also aim with the mouse.<br>
-      Use the Skill button to fire bullets in every direction (3 sec cooldown, 3 uses).
+      Use the Skill button to fire bullets in every direction (3 sec cooldown, 3 uses).<br>
+      Kill enemies rapidly to build your combo multiplier and level up!
     </p>
     <button id="startButton">Start Game</button>
   </div>
@@ -206,13 +207,66 @@
       }
       resizeCanvas();
       
+      // ----- Starfield Background Setup -----
+      const stars = [];
+      const numStars = 150;
+      function initStars() {
+        stars.length = 0;
+        for (let i = 0; i < numStars; i++) {
+          stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: Math.random() * 1.5,
+            speed: 0.2 + Math.random() * 0.8  // Different speeds for parallax effect
+          });
+        }
+      }
+      initStars();
+      
+      function updateStars(dt) {
+        const factor = dt / 16;
+        stars.forEach(star => {
+          star.y += star.speed * factor;
+          // When a star goes off the bottom, recycle it at the top.
+          if (star.y > canvas.height) {
+            star.y = 0;
+            star.x = Math.random() * canvas.width;
+          }
+        });
+      }
+      
+      function drawStars() {
+        ctx.fillStyle = "white";
+        stars.forEach(star => {
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+      
       // ----- Global Game Stats -----
       let health = 100, ammo = 30, score = 0;
+      let level = 1;
+      let combo = 1;
+      let lastKillTime = 0;
+      const comboWindow = 2000; // milliseconds for chaining kills
+      
       // Skill stats:
       let skillCount = 3; // limited uses
       let skillReady = true; // cooldown flag
       const skillCooldownDuration = 3000; // in ms
       let lastSkillTime = 0;
+      
+      // Power-up (rapid fire) variables
+      const powerups = [];
+      let rapidFireActive = false;
+      let rapidFireEndTime = 0;
+      const rapidFireDuration = 5000; // 5 seconds duration
+      
+      // Health/invincibility variables
+      let invincible = false;
+      let invincibleEndTime = 0;
+      const invincibilityDuration = 1500;
       
       // Global aimAngle (in radians)
       let aimAngle = -Math.PI / 2;
@@ -230,7 +284,8 @@
         enemyShoot: new Audio('shoot.mp3'),
         gift: new Audio('gift.mp3'),
         explosion: new Audio('explosion.mp3'),
-        gameover: new Audio('gameover.mp3')
+        gameover: new Audio('gameover.mp3'),
+        powerup: new Audio('powerup.mp3')
       };
       
       // Timing variable for delta time
@@ -242,6 +297,8 @@
         document.getElementById('ammo').textContent = ammo;
         document.getElementById('score').textContent = score;
         document.getElementById('skillCount').textContent = skillCount;
+        document.getElementById('level').textContent = level;
+        document.getElementById('combo').textContent = "x" + combo;
       }
       updateHUD();
       
@@ -250,11 +307,10 @@
         x: canvas.width / 2,
         y: canvas.height / 2,
         radius: 20,
-        speed: 3  // Base speed per frame factor
+        speed: 3
       };
       
       // ----- Input Management for Desktop -----
-      // Keyboard movement support
       const keys = {};
       document.addEventListener('keydown', (e) => {
         keys[e.key.toLowerCase()] = true;
@@ -269,8 +325,6 @@
       
       // Declare mouse variable
       const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
-      
-      // For devices that support hover (non-touch), add mouse aiming and canvas click.
       if (window.matchMedia("(hover: hover)").matches) {
         canvas.addEventListener('mousemove', (e) => {
           const rect = canvas.getBoundingClientRect();
@@ -294,14 +348,12 @@
       const moveCenter = { x: moveBase.clientWidth / 2, y: moveBase.clientHeight / 2 };
       let moveActive = false, moveTouchId = null;
       let moveVector = { x: 0, y: 0 };
-      
       function resetMoveKnob() {
         moveKnob.style.left = (moveCenter.x - moveKnob.offsetWidth / 2) + "px";
         moveKnob.style.top = (moveCenter.y - moveKnob.offsetHeight / 2) + "px";
         moveVector = { x: 0, y: 0 };
       }
       resetMoveKnob();
-      
       moveJoystick.addEventListener('touchstart', (e) => {
         e.preventDefault();
         if(e.changedTouches.length > 0){
@@ -311,7 +363,6 @@
           updateMoveKnobPosition(touch.clientX, touch.clientY);
         }
       });
-      
       moveJoystick.addEventListener('touchmove', (e) => {
         e.preventDefault();
         for(let touch of e.changedTouches){
@@ -320,7 +371,6 @@
           }
         }
       });
-      
       moveJoystick.addEventListener('touchend', (e) => {
         e.preventDefault();
         for(let touch of e.changedTouches){
@@ -331,7 +381,6 @@
           }
         }
       });
-      
       function updateMoveKnobPosition(clientX, clientY) {
         const rect = moveJoystick.getBoundingClientRect();
         let localX = clientX - rect.left;
@@ -348,7 +397,6 @@
         moveKnob.style.left = (moveCenter.x + dx - moveKnob.offsetWidth / 2) + "px";
         moveKnob.style.top = (moveCenter.y + dy - moveKnob.offsetHeight / 2) + "px";
         moveVector = { x: dx, y: dy };
-        // On touch devices, update aim only if the joystick is moved sufficiently
         if(Math.hypot(dx, dy) > 5){
           aimAngle = Math.atan2(dy, dx);
         }
@@ -374,12 +422,13 @@
         if (ammo > 0) {
           const spawnX = player.x + Math.cos(aimAngle) * player.radius;
           const spawnY = player.y + Math.sin(aimAngle) * player.radius;
+          let bulletSpeed = rapidFireActive ? 10 : 7;
           const bullet = {
             x: spawnX,
             y: spawnY,
-            radius: 5,
-            dx: Math.cos(aimAngle) * 7,
-            dy: Math.sin(aimAngle) * 7
+            radius: 3,
+            dx: Math.cos(aimAngle) * bulletSpeed,
+            dy: Math.sin(aimAngle) * bulletSpeed
           };
           bullets.push(bullet);
           ammo--;
@@ -401,7 +450,7 @@
             const bullet = {
               x: spawnX,
               y: spawnY,
-              radius: 5,
+              radius: 3,
               dx: Math.cos(angle) * 7,
               dy: Math.sin(angle) * 7
             };
@@ -442,14 +491,53 @@
         sounds.explosion.play();
       }
       
+      // ----- Power-up Spawn Function (Rapid Fire) -----
+      function spawnPowerup() {
+        const powerup = {
+          x: Math.random() * (canvas.width - 100) + 50,
+          y: Math.random() * (canvas.height - 100) + 50,
+          radius: 15,
+          type: 'rapidFire'
+        };
+        powerups.push(powerup);
+        setTimeout(() => {
+          const idx = powerups.indexOf(powerup);
+          if (idx !== -1) powerups.splice(idx, 1);
+        }, 10000);
+      }
+      
+      // ----- Enemy AI Improvements -----
+      // Instead of always moving directly towards the player,
+      // enemies now add a small random angle offset (wiggle) for unpredictability.
+      // When the enemy is close (within 200px) they also try to circle the player.
+      function updateEnemyAI(enemy, dt) {
+        // Base angle toward player
+        let targetAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+        // Add a random wiggle (in radians)
+        const maxWiggle = 0.15;  // maximum wiggle offset (~8.6°)
+        let wiggle = (Math.random() * 2 - 1) * maxWiggle;
+        // If enemy is close, add a circling factor instead
+        const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+        if (dist < 200) {
+          // Try to circle by offsetting perpendicular to the angle to the player.
+          const circleFactor = 0.3;  // adjust for stronger circling behavior
+          wiggle = circleFactor * (Math.random() * 2 - 1);
+        }
+        // Apply the wiggle to the target angle
+        targetAngle += wiggle;
+        return targetAngle;
+      }
+      
       // ----- Game Objects Update -----
       function update(dt) {
-        const factor = dt / 16;  // Scale factor
-        
-        // Update skill cooldown visual
+        const factor = dt / 16;
         updateSkillCooldown();
+        updateStars(dt);
         
-        // Update movement (touch joystick or keyboard)
+        if (rapidFireActive && performance.now() > rapidFireEndTime) {
+          rapidFireActive = false;
+        }
+        
         let mvx = 0, mvy = 0;
         if (moveActive) {
           mvx += moveVector.x / 40;
@@ -466,8 +554,6 @@
           player.x += mvx * player.speed * factor;
           player.y += mvy * player.speed * factor;
         }
-        
-        // Constrain player within canvas
         player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
         player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
         
@@ -480,7 +566,7 @@
             bullets.splice(i, 1);
         }
         
-        // Update enemy bullets
+        // Update enemy bullets with damage and invincibility handling
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
           const eb = enemyBullets[i];
           eb.x += eb.dx * factor;
@@ -490,20 +576,27 @@
           else {
             const dist = Math.hypot(player.x - eb.x, player.y - eb.y);
             if (dist < player.radius + eb.radius) {
+              if (!invincible) {
+                health -= 20;
+                updateHUD();
+                invincible = true;
+                invincibleEndTime = performance.now() + invincibilityDuration;
+              }
               enemyBullets.splice(i, 1);
-              createExplosion(player.x, player.y);
-              health = 0;
-              updateHUD();
             }
           }
         }
+        if (invincible && performance.now() > invincibleEndTime) {
+          invincible = false;
+        }
         
-        // Update enemies
+        // Update enemies with improved AI
         for (let i = enemies.length - 1; i >= 0; i--) {
           const enemy = enemies[i];
-          const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-          enemy.x += Math.cos(angle) * enemy.speed * factor;
-          enemy.y += Math.sin(angle) * enemy.speed * factor;
+          // Use our improved enemy AI to get the movement angle
+          const aiAngle = updateEnemyAI(enemy, dt);
+          enemy.x += Math.cos(aiAngle) * enemy.speed * factor * (1 + (level - 1) * 0.1);
+          enemy.y += Math.sin(aiAngle) * enemy.speed * factor * (1 + (level - 1) * 0.1);
           enemy.shootCooldown -= dt;
           if (enemy.shootCooldown <= 0) {
             const bulletAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
@@ -528,6 +621,33 @@
           }
         }
         
+        // Check bullet-enemy collisions
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          const enemy = enemies[i];
+          for (let j = bullets.length - 1; j >= 0; j--) {
+            const bullet = bullets[j];
+            const dist = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
+            if (dist < enemy.radius + bullet.radius) {
+              createExplosion(enemy.x, enemy.y);
+              enemies.splice(i, 1);
+              bullets.splice(j, 1);
+              const now = performance.now();
+              if (now - lastKillTime < comboWindow) {
+                combo++;
+              } else {
+                combo = 1;
+              }
+              lastKillTime = now;
+              score += 100 * combo;
+              updateHUD();
+              if(score >= level * 1000) {
+                level++;
+              }
+              break;
+            }
+          }
+        }
+        
         // Update gifts (for ammo and score)
         for (let i = gifts.length - 1; i >= 0; i--) {
           const gift = gifts[i];
@@ -542,24 +662,20 @@
           }
         }
         
-        // Check bullet-enemy collisions
-        for (let i = enemies.length - 1; i >= 0; i--) {
-          const enemy = enemies[i];
-          for (let j = bullets.length - 1; j >= 0; j--) {
-            const bullet = bullets[j];
-            const dist = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
-            if (dist < enemy.radius + bullet.radius) {
-              createExplosion(enemy.x, enemy.y);
-              enemies.splice(i, 1);
-              bullets.splice(j, 1);
-              score += 100;
-              updateHUD();
-              break;
-            }
+        // Update powerups (check for player collision)
+        for (let i = powerups.length - 1; i >= 0; i--) {
+          const p = powerups[i];
+          const dist = Math.hypot(player.x - p.x, player.y - p.y);
+          if (dist < player.radius + p.radius) {
+            rapidFireActive = true;
+            rapidFireEndTime = performance.now() + rapidFireDuration;
+            powerups.splice(i, 1);
+            sounds.powerup.currentTime = 0;
+            sounds.powerup.play();
           }
         }
         
-        // Update explosions
+        // Update explosions (simple expanding circle explosion)
         for (let i = explosions.length - 1; i >= 0; i--) {
           const exp = explosions[i];
           exp.radius += 0.5 * factor;
@@ -571,17 +687,21 @@
       
       // ----- Draw Function -----
       function draw() {
-        // Dynamic background
-        const bgGradient = ctx.createRadialGradient(
-          canvas.width / 2, canvas.height / 2, 100,
+        // Draw animated starfield background
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawStars();
+        
+        // Optional overlay for depth
+        const overlayGrad = ctx.createRadialGradient(
+          canvas.width / 2, canvas.height / 2, canvas.width / 4,
           canvas.width / 2, canvas.height / 2, canvas.width
         );
-        bgGradient.addColorStop(0, '#222');
-        bgGradient.addColorStop(1, '#111');
-        ctx.fillStyle = bgGradient;
+        overlayGrad.addColorStop(0, "rgba(0,0,0,0)");
+        overlayGrad.addColorStop(1, "rgba(0,0,0,0.5)");
+        ctx.fillStyle = overlayGrad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Dashed aiming line from player using aimAngle
         ctx.save();
         ctx.setLineDash([10, 10]);
         ctx.strokeStyle = 'rgba(255,255,255,0.3)';
@@ -595,44 +715,59 @@
         ctx.stroke();
         ctx.restore();
         
-        // Draw player with a gun attached
-        ctx.save();
-        // Draw the player body
-        const pGrad = ctx.createRadialGradient(
-          player.x - player.radius/2, player.y - player.radius/2,
-          player.radius/4,
-          player.x, player.y, player.radius
-        );
-        pGrad.addColorStop(0, '#00f');
-        pGrad.addColorStop(1, '#003');
-        ctx.fillStyle = pGrad;
-        ctx.shadowColor = 'rgba(0,0,255,0.7)';
-        ctx.shadowBlur = 20;
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-        ctx.fill();
-        // Draw the gun for the player
-        ctx.translate(player.x, player.y);
-        ctx.rotate(aimAngle);
-        ctx.fillStyle = '#888';  // Gun color
-        // Draw a rectangle for the gun starting at the edge of the player
-        ctx.fillRect(player.radius, -5, player.radius + 10, 10);
-        ctx.restore();
+        // Draw player with flashing effect if invincible
+        let drawPlayer = true;
+        if (invincible) {
+          if (Math.floor(performance.now() / 100) % 2 === 0) {
+            drawPlayer = false;
+          }
+        }
+        if (drawPlayer) {
+          ctx.save();
+          // Improved realistic look: smoother radial gradient with subtle highlight and visor
+          const pGrad = ctx.createRadialGradient(
+            player.x - player.radius * 0.3, player.y - player.radius * 0.3,
+            player.radius * 0.2,
+            player.x, player.y, player.radius
+          );
+          pGrad.addColorStop(0, "#66aaff");
+          pGrad.addColorStop(0.7, "#003366");
+          pGrad.addColorStop(1, "#001122");
+          ctx.fillStyle = pGrad;
+          ctx.shadowColor = 'rgba(0,0,255,0.7)';
+          ctx.shadowBlur = 25;
+          ctx.beginPath();
+          ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(player.x, player.y - player.radius * 0.3, player.radius * 0.6, player.radius * 0.4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.translate(player.x, player.y);
+          ctx.rotate(aimAngle);
+          ctx.fillStyle = '#888';
+          ctx.fillRect(player.radius, -5, player.radius + 10, 10);
+          ctx.restore();
+        }
         
-        // Draw bullets
+        // Draw bullets with enhanced glow effect and reduced core size
         bullets.forEach(bullet => {
           ctx.save();
+          const glowRadius = 8;
           const bGrad = ctx.createRadialGradient(
             bullet.x, bullet.y, 0,
-            bullet.x, bullet.y, 5
+            bullet.x, bullet.y, glowRadius
           );
-          bGrad.addColorStop(0, '#ff0');
-          bGrad.addColorStop(1, '#aa0');
+          bGrad.addColorStop(0, '#fffa77');
+          bGrad.addColorStop(0.5, '#ffea00');
+          bGrad.addColorStop(1, 'rgba(255,234,0,0)');
           ctx.fillStyle = bGrad;
-          ctx.shadowColor = 'rgba(255,255,0,0.8)';
-          ctx.shadowBlur = 10;
           ctx.beginPath();
-          ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+          ctx.arc(bullet.x, bullet.y, glowRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#ff0';
           ctx.fill();
           ctx.restore();
         });
@@ -655,12 +790,10 @@
           ctx.restore();
         });
         
-        // Draw enemies with guns attached
+        // Draw enemies
         enemies.forEach(enemy => {
           ctx.save();
-          // Translate to enemy's position
           ctx.translate(enemy.x, enemy.y);
-          // Draw enemy body
           const eGrad = ctx.createRadialGradient(
             0, 0, enemy.radius/4,
             0, 0, enemy.radius
@@ -673,10 +806,9 @@
           ctx.beginPath();
           ctx.arc(0, 0, enemy.radius, 0, Math.PI * 2);
           ctx.fill();
-          // Determine the angle towards the player for the gun
           let enemyAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
           ctx.rotate(enemyAngle);
-          ctx.fillStyle = '#555'; // Gun color for enemy
+          ctx.fillStyle = '#555';
           ctx.fillRect(enemy.radius, -4, enemy.radius + 8, 8);
           ctx.restore();
         });
@@ -695,6 +827,18 @@
           ctx.shadowBlur = 15;
           ctx.beginPath();
           ctx.arc(gift.x, gift.y, gift.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+        
+        // Draw powerups (rapid fire)
+        powerups.forEach(p => {
+          ctx.save();
+          ctx.fillStyle = '#0ff';
+          ctx.shadowColor = 'rgba(0,255,255,0.8)';
+          ctx.shadowBlur = 15;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         });
@@ -735,7 +879,6 @@
         ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 50);
         sounds.gameover.currentTime = 0;
         sounds.gameover.play();
-        // Show the start menu again.
         document.getElementById('startScreen').classList.add("active");
       }
       
@@ -752,7 +895,9 @@
           y: y,
           radius: 20,
           speed: 1.5,
-          shootCooldown: Math.random() * 3000 + 2000
+          // Each enemy gets an initial shootCooldown and also an optional 'wiggleTime' for AI changes
+          shootCooldown: Math.random() * 3000 + 2000,
+          nextWiggle: performance.now() + (500 + Math.random() * 1000) // random interval for changing offset
         };
         enemies.push(enemy);
       }
@@ -770,36 +915,37 @@
         }, 10000);
       }
       
-      // ----- Start Game Button -----
+      setInterval(spawnEnemy, 2000);
+      setInterval(spawnGift, 10000);
+      setInterval(spawnPowerup, 15000);
+      
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        initStars(); // Reinitialize stars on resize for proper coverage
+      });
+      
       document.getElementById('startButton').addEventListener('click', () => {
         document.getElementById('startScreen').classList.remove("active");
-        // Reset game stats
         health = 100; 
         ammo = 30; 
         score = 0; 
+        level = 1;
+        combo = 1;
         skillCount = 3; 
         skillReady = true;
+        rapidFireActive = false;
+        invincible = false;
         updateHUD();
-        // Clear any remaining game objects
         bullets.length = 0;
         enemyBullets.length = 0;
         enemies.length = 0;
         gifts.length = 0;
+        powerups.length = 0;
         explosions.length = 0;
-        // Reset player position
         player.x = canvas.width / 2;
         player.y = canvas.height / 2;
         lastTime = performance.now();
         requestAnimationFrame(gameLoop);
-      });
-      
-      // ----- Periodic Spawning -----
-      setInterval(spawnEnemy, 2000);
-      setInterval(spawnGift, 10000);
-      
-      // Adjust canvas on window resize
-      window.addEventListener('resize', () => {
-        resizeCanvas();
       });
     });
   </script>
