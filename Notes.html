@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MBS Notes - R-Verse</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome CDN -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #4f46e5;
+      --accent: #f59e0b;
+      --light: #f8fafc;
+      --dark: #0f172a;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    .hero-section {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      padding: 4rem 0;
+      margin-bottom: 3rem;
+      border-radius: 0 0 2rem 2rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    }
+
+    .hero-title {
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .accordion-button {
+      font-weight: 700;
+      background: var(--light);
+      border: 2px solid var(--primary);
+      border-radius: 12px !important;
+      margin: 0.5rem 0;
+      transition: all 0.3s ease;
+    }
+
+    .accordion-button:not(.collapsed) {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .subject-card {
+      background: white;
+      border: none;
+      border-radius: 16px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.3s ease;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .subject-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .subject-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+    }
+
+    .subject-card:hover::before {
+      opacity: 1;
+    }
+
+    .btn-preview {
+      background: var(--accent);
+      color: white;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-preview:hover {
+      transform: translateY(-2px);
+      color: white;
+      background: #e67e22;
+    }
+
+    .btn-download {
+      background: var(--primary);
+      color: white;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-download:hover {
+      background: #1d4ed8;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .pdf-preview-modal {
+      border-radius: 1rem;
+      border: none;
+    }
+
+    .modal-header {
+      background: var(--primary);
+      color: white;
+      border-radius: 1rem 1rem 0 0;
+    }
+
+    .modal-title {
+      font-weight: 700;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .spinner {
+      width: 3rem;
+      height: 3rem;
+      border-width: 3px;
+    }
+
+    @media (max-width: 768px) {
+      .hero-section {
+        padding: 2rem 0;
+        border-radius: 0 0 1rem 1rem;
+      }
+      
+      .hero-title {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero-section">
+    <div class="container text-center">
+      <h1 class="hero-title text-white mb-4">MBS Notes Repository</h1>
+      <p class="lead text-white-80 mb-0">Access comprehensive study materials for all semesters</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Search Bar -->
+    <div class="row justify-content-center mb-5">
+      <div class="col-md-8">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+          </span>
+          <input type="text" class="form-control border-start-0" placeholder="Search subjects...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Semesters Accordion -->
+    <div class="accordion" id="semesterAccordion">
+      <!-- Semester 1 -->
+      <div class="accordion-item border-0">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sem1">
+            <i class="fas fa-book-open me-3"></i>
+            Semester 1
+          </button>
+        </h2>
+        <div id="sem1" class="accordion-collapse collapse show">
+          <div class="accordion-body pt-4">
+            <div class="row g-4">
+              <!-- Subject Card -->
+              <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="subject-card h-100 p-3">
+                  <div class="card-body text-center">
+                    <div class="mb-3">
+                      <i class="fas fa-file-pdf fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Financial Accounting</h5>
+                    <div class="d-grid gap-2">
+                      <button class="btn btn-preview" data-pdf="pdfs/sem1_subject1.pdf">
+                        <i class="fas fa-eye me-2"></i>Preview
+                      </button>
+                      <a href="pdfs/sem1_subject1.pdf" class="btn btn-download">
+                        <i class="fas fa-download me-2"></i>Download
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Repeat other subjects following same structure -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Other semesters follow similar structure -->
+    </div>
+  </div>
+
+  <!-- PDF Preview Modal -->
+  <div class="modal fade" id="pdfModal" tabindex="-1">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-content pdf-preview-modal">
+        <div class="modal-header">
+          <h5 class="modal-title">Document Preview</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body position-relative">
+          <div class="loading-overlay">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+          <iframe id="pdfFrame" class="w-100 h-100" style="border: none"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function openPreview(btn) {
+      const pdfUrl = btn.dataset.pdf;
+      const modal = new bootstrap.Modal('#pdfModal');
+      const iframe = document.getElementById('pdfFrame');
+      const loading = document.querySelector('.loading-overlay');
+
+      iframe.onload = () => loading.style.display = 'none';
+      loading.style.display = 'flex';
+      iframe.src = pdfUrl;
+      modal.show();
+    }
+
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(t => new bootstrap.Tooltip(t));
+  </script>
+</body>
+</html>
