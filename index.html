@@ -29,7 +29,11 @@
       color: #1A2238; /* Deep Sapphire Blue */
       margin: 0;
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
+    
     /* Navbar Styling */
     .navbar {
       background-color: #273A5D; /* Midnight Navy */
@@ -46,7 +50,6 @@
     .navbar-toggler-icon {
       background-color: #F5F5F5;
     }
-    /* Donate Button Style in Navbar */
     .btn-donate {
       background-color: #C4A484;
       border: none;
@@ -58,9 +61,10 @@
     .btn-donate:hover {
       background-color: #b38d78;
     }
+
     /* Sidebar Styling */
     .sidebar {
-      background-color: #34495e; /* Darker shade */
+      background-color: #34495e;
       color: #F5F5F5;
       width: 250px;
       position: fixed;
@@ -86,7 +90,6 @@
     .sidebar a:hover {
       background-color: #C4A484; /* Rich Gold */
     }
-    /* Sidebar Overlay for mobile */
     .sidebar-overlay {
       position: fixed;
       top: 0;
@@ -103,8 +106,10 @@
       visibility: visible;
       opacity: 1;
     }
-    /* Content Styling */
+
+    /* Main Content Styling */
     .content {
+      flex: 1;
       margin-left: 0;
       padding: 30px;
       transition: margin-left 0.3s ease;
@@ -112,6 +117,7 @@
     .content.show {
       margin-left: 250px;
     }
+    
     /* Header Section */
     .header-section {
       background: linear-gradient(135deg, #1A2238 0%, #273A5D 100%);
@@ -121,12 +127,13 @@
       border-radius: 8px;
       margin-bottom: 30px;
     }
+
     /* Card Styling */
     .card {
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       background-color: #F5F5F5;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .card-img-top {
       width: 100%;
@@ -135,7 +142,8 @@
       border-radius: 10px 10px 0 0;
     }
     .card:hover {
-      transform: scale(1.03);
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     }
     .card-body {
       text-align: center;
@@ -143,6 +151,7 @@
     .card-title {
       color: #1A2238;
     }
+
     /* Button Styling */
     .btn-primary {
       background-color: #C4A484;
@@ -156,7 +165,41 @@
     .btn-primary:hover {
       background-color: #1d7ab9;
     }
-    /* Container spacing */
+
+    /* Beautiful Footer Styling */
+    footer {
+      background-color: #273A5D;
+      color: #F5F5F5;
+      padding: 40px 0;
+      font-family: 'Poppins', sans-serif;
+    }
+    footer a {
+      color: #F5F5F5;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    footer a:hover {
+      color: #C4A484;
+    }
+    footer .social-icons a {
+      font-size: 1.2rem;
+      margin-right: 15px;
+      color: #F5F5F5;
+      transition: color 0.3s ease;
+    }
+    footer .social-icons a:hover {
+      color: #C4A484;
+    }
+    footer hr {
+      border-top: 1px solid rgba(245, 245, 245, 0.3);
+    }
+    footer .footer-bottom {
+      padding-top: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    /* Container spacing for main content */
     .container-fluid {
       margin-top: 100px;
     }
@@ -181,16 +224,14 @@
           <li class="nav-item">
             <a class="nav-link" href="#">Apps</a>
           </li>
-
           <li class="nav-item">
-            <a class="nav-link" href="Notes.html">Mbs Notes
-              
-            </a>
+            <a class="nav-link" href="Notes.html">Mbs Notes</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="donate.html">Donate
-              
-            </a>
+            <a class="nav-link" href="pdfs.html">School notes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="donate.html">Donate</a>
           </li>
           
         </ul>
@@ -213,6 +254,10 @@
       <li class="nav-item">
         <a class="nav-link" href="#">📱 Apps</a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" href="pdfs.html">PDFs</a>
+      </li>
+      
     </ul>
   </div>
 
@@ -324,10 +369,63 @@
     </section>
   </div>
 
+<footer class="bg-dark text-light py-5">
+  <div class="container">
+    <div class="row text-center text-md-start">
+      <!-- About Section -->
+      <div class="col-md-4 mb-4">
+        <h5 class="mb-3">About R-Verse</h5>
+        <p class="mb-0">
+          Your go-to destination for the best games & apps. Discover endless entertainment and innovative tools right at your fingertips.
+        </p>
+      </div>
+      <!-- Quick Links -->
+      <div class="col-md-4 mb-4">
+        <h5 class="mb-3">Quick Links</h5>
+        <ul class="list-unstyled">
+          <li class="mb-2"><a href="#" class="text-light text-decoration-none">Home</a></li>
+          <li class="mb-2"><a href="#" class="text-light text-decoration-none">Games</a></li>
+          <li class="mb-2"><a href="#" class="text-light text-decoration-none">Apps</a></li>
+          <li class="mb-2"><a href="donate.html" class="text-light text-decoration-none">Donate</a></li>
+        </ul>
+      </div>
+      <!-- Follow Us -->
+      <div class="col-md-4 mb-4">
+        <h5 class="mb-3">Follow Us</h5>
+        <div class="d-flex justify-content-center justify-content-md-start">
+          <a href="#" class="text-light me-3" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" class="text-light me-3" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="text-light me-3" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="text-light" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+    <!-- Divider -->
+    <hr class="border-light my-4">
+    <!-- Footer Bottom -->
+    <div class="text-center">
+      <small>&copy; <span id="year"></span> R-Verse. All Rights Reserved.</small>
+    </div>
+  </div>
+</footer>
+
+<!-- JavaScript to update the year dynamically -->
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+  
+  <!-- Optional JavaScript to update the year dynamically -->
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+  
+
   <!-- Bootstrap JS and Popper.js -->
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Sidebar Toggle Script
     const toggleSidebar = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
     const content = document.getElementById('content');
@@ -345,6 +443,9 @@
       content.classList.remove('show');
       sidebarOverlay.classList.remove('show');
     });
+
+    // Dynamically update the year in the footer
+    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>

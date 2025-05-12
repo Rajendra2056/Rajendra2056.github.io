@@ -1,142 +1,797 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-CMCLT1ZWS7"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-CMCLT1ZWS7');
-</script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ping Pong Game</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #222;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .game-container {
-            border: 3px solid #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        canvas {
-            background-color: #000;
-        }
-    </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CMCLT1ZWS7"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CMCLT1ZWS7');
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ping pong</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .game-container {
+      border: 3px solid #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    canvas {
+      background-color: #000;
+      touch-action: none; /* Prevent default touch behaviors */
+    }
+  </style>
 </head>
 <body>
-    <div class="game-container">
-        <canvas id="pingpong" width="800" height="400"></canvas>
-    </div>
-    <script>
-        const canvas = document.getElementById("pingpong");
-        const ctx = canvas.getContext("2d");
+  <div class="game-container">
+    <canvas id="pingpong" width="800" height="400"></canvas>
+  </div>
+  <script>
+    // Get canvas and context
+    const canvas = document.getElementById("pingpong");
+    const ctx = canvas.getContext("2d");
 
-        let ballRadius = 10;
-        let x = canvas.width / 2;
-        let y = canvas.height - 30;
-        let dx = 4;
-        let dy = -4;
+    // Global game variables
+    let ballRadius = 10;
+    let x = canvas.width / 2;
+    let y = canvas.height - 50;
+    let dx = 4;
+    let dy = -4;
+    let speed = 1;
 
-        let paddleHeight = 10;
-        let paddleWidth = 75;
-        let paddleX = (canvas.width - paddleWidth) / 2;
+    const originalPaddleWidth = 75;
+    let paddleHeight = 10;
+    let paddleWidth = originalPaddleWidth;
+    let paddleX = (canvas.width - paddleWidth) / 2;
 
-        let rightPressed = false;
-        let leftPressed = false;
+    let rightPressed = false;
+    let leftPressed = false;
+    let score = 0;
+    let powerUp = null; // Power-up object will be stored here
 
-        let speed = 1;
+    // Game states: 'menu', 'playing', 'paused', 'gameover'
+    let gameState = 'menu';
 
-        document.addEventListener("keydown", keyDownHandler, false);
-        document.addEventListener("keyup", keyUpHandler, false);
+    // Keyboard event listeners
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
 
-        function keyDownHandler(e) {
-            if (e.key == "Right" || e.key == "ArrowRight") {
-                rightPressed = true;
-            } else if (e.key == "Left" || e.key == "ArrowLeft") {
-                leftPressed = true;
+    function keyDownHandler(e) {
+      if (e.key === "Right" || e.key === "ArrowRight") {
+        rightPressed = true;
+      } else if (e.key === "Left" || e.key === "ArrowLeft") {
+        leftPressed = true;
+      } else if (e.key.toLowerCase() === "p") {
+        // Toggle pause when P is pressed
+        if (gameState === 'playing') {
+          gameState = 'paused';
+        } else if (gameState === 'paused') {
+          gameState = 'playing';
+        }
+      }
+    }
+
+    function keyUpHandler(e) {
+      if (e.key === "Right" || e.key === "ArrowRight") {
+        rightPressed = false;
+      } else if (e.key === "Left" || e.key === "ArrowLeft") {
+        leftPressed = false;
+      }
+    }
+
+    // Touch event handlers for mobile devices
+    function handleTouch(e) {
+      e.preventDefault();
+      if (e.touches.length) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        let touchX = touch.clientX - rect.left;
+        // Center the paddle on the touch position
+        paddleX = touchX - paddleWidth / 2;
+        // Ensure the paddle stays within canvas bounds
+        if (paddleX < 0) paddleX = 0;
+        if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
+      }
+    }
+    canvas.addEventListener("touchstart", handleTouch, { passive: false });
+    canvas.addEventListener("touchmove", handleTouch, { passive: false });
+
+    // Click event to start or restart the game
+    canvas.addEventListener("click", () => {
+      if (gameState === 'menu' || gameState === 'gameover') {
+        restartGame();
+      }
+    });
+
+    // Draw background with gradient
+    function drawBackground() {
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, "#333");
+      gradient.addColorStop(1, "#000");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Draw the ball with a radial gradient and shadow
+    function drawBall() {
+      ctx.save();
+      ctx.beginPath();
+      const ballGradient = ctx.createRadialGradient(x, y, ballRadius * 0.2, x, y, ballRadius);
+      ballGradient.addColorStop(0, "#fff");
+      ballGradient.addColorStop(1, "#ff0");
+      ctx.fillStyle = ballGradient;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+      ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    // Draw the paddle with a glow effect
+    function drawPaddle() {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+      ctx.fillStyle = "#fff";
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+      ctx.fill();
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    // Display the score
+    function drawScore() {
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "#fff";
+      ctx.fillText("Score: " + score, 8, 20);
+    }
+
+    // Collision detection for the ball and paddle
+    function collisionDetection() {
+      if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+        dx = -dx;
+      }
+      if (y + dy < ballRadius) {
+        dy = -dy;
+      } else if (y + dy > canvas.height - ballRadius) {
+        if (x > paddleX && x < paddleX + paddleWidth) {
+          dy = -dy;
+          speed += 0.05; // Increase ball speed after paddle hit
+          score++;
+        } else {
+          gameState = 'gameover';
+        }
+      }
+    }
+
+    // Update paddle position with keyboard input
+    function movePaddle() {
+      if (rightPressed && paddleX < canvas.width - paddleWidth) {
+        paddleX += 7;
+      } else if (leftPressed && paddleX > 0) {
+        paddleX -= 7;
+      }
+    }
+
+    // ---------------- Power-up Functions ----------------
+    // Spawn a power-up at a random x-position at the top
+    function spawnPowerUp() {
+      powerUp = {
+        x: Math.random() * (canvas.width - 20) + 10,
+        y: 0,
+        radius: 8,
+        dy: 2,
+        type: 'enlarge'
+      };
+    }
+
+    // Draw the power-up (a lime circle)
+    function drawPowerUp() {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(powerUp.x, powerUp.y, powerUp.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "lime";
+      ctx.fill();
+      ctx.closePath();
+      ctx.restore();
+    }
+    // ------------------------------------------------------
+
+    // Draw main menu overlay
+    function drawMenu() {
+      ctx.font = "48px Arial";
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.fillText("Ping Pong Game", canvas.width / 2, canvas.height / 2 - 60);
+      ctx.font = "24px Arial";
+      ctx.fillText("Tap or Click to Start", canvas.width / 2, canvas.height / 2);
+      ctx.fillText("Use Arrow keys or touch to move", canvas.width / 2, canvas.height / 2 + 40);
+      ctx.fillText("Press 'P' to Pause", canvas.width / 2, canvas.height / 2 + 80);
+    }
+
+    // Draw pause overlay
+    function drawPauseOverlay() {
+      ctx.font = "48px Arial";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.textAlign = "center";
+      ctx.fillText("Paused", canvas.width / 2, canvas.height / 2);
+    }
+
+    // Draw game over overlay
+    function drawGameOver() {
+      ctx.font = "48px Arial";
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
+      ctx.font = "24px Arial";
+      ctx.fillText("Tap or Click to Restart", canvas.width / 2, canvas.height / 2 + 40);
+    }
+
+    // Restart the game by resetting variables and switching to 'playing'
+    function restartGame() {
+      gameState = 'playing';
+      x = canvas.width / 2;
+      y = canvas.height - 50;
+      dx = 4;
+      dy = -4;
+      speed = 1;
+      paddleWidth = originalPaddleWidth;
+      paddleX = (canvas.width - paddleWidth) / 2;
+      score = 0;
+      powerUp = null;
+    }
+
+    // ---------------- Main Draw Loop ----------------
+    function draw() {
+      drawBackground();
+
+      if (gameState === 'menu') {
+        // Show the main menu
+        drawMenu();
+      } else if (gameState === 'playing') {
+        // Update and draw game objects
+        drawBall();
+        drawPaddle();
+        drawScore();
+        collisionDetection();
+        movePaddle();
+
+        // Randomly spawn a power-up if one isn't present
+        if (!powerUp && Math.random() < 0.002) {
+          spawnPowerUp();
+        }
+        if (powerUp) {
+          powerUp.y += powerUp.dy;
+          // Remove power-up if it falls off the canvas
+          if (powerUp.y - powerUp.radius > canvas.height) {
+            powerUp = null;
+          } else {
+            drawPowerUp();
+            // Check for collision between paddle and power-up
+            if (
+              powerUp.y + powerUp.radius >= canvas.height - paddleHeight &&
+              powerUp.x > paddleX &&
+              powerUp.x < paddleX + paddleWidth
+            ) {
+              paddleWidth = 150; // Enlarge paddle temporarily
+              setTimeout(() => { paddleWidth = originalPaddleWidth; }, 5000);
+              powerUp = null;
             }
+          }
         }
-
-        function keyUpHandler(e) {
-            if (e.key == "Right" || e.key == "ArrowRight") {
-                rightPressed = false;
-            } else if (e.key == "Left" || e.key == "ArrowLeft") {
-                leftPressed = false;
-            }
+        // Update ball position
+        x += dx * speed;
+        y += dy * speed;
+      } else if (gameState === 'paused') {
+        // Draw current frame but do not update positions
+        drawBall();
+        drawPaddle();
+        drawScore();
+        if (powerUp) {
+          drawPowerUp();
         }
-
-        function drawBall() {
-            ctx.beginPath();
-            ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-            ctx.fillStyle = "#fff";
-            ctx.fill();
-            ctx.closePath();
+        drawPauseOverlay();
+      } else if (gameState === 'gameover') {
+        // Show the final frame and the game over overlay
+        drawBall();
+        drawPaddle();
+        drawScore();
+        if (powerUp) {
+          drawPowerUp();
         }
+        drawGameOver();
+      }
 
-        function drawPaddle() {
-            ctx.beginPath();
-            ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
-            ctx.fillStyle = "#fff";
-            ctx.fill();
-            ctx.closePath();
-        }
+      requestAnimationFrame(draw);
+    }
 
-        function collisionDetection() {
-            if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
-                dx = -dx;
-            }
-            if (y + dy < ballRadius) {
-                dy = -dy;
-            } else if (y + dy > canvas.height - ballRadius) {
-                if (x > paddleX && x < paddleX + paddleWidth) {
-                    dy = -dy;
-                    speed += 0.05; // increase ball speed after every hit
-                } else {
-                    document.location.reload(); // Reset the game if the ball hits the bottom
-                }
-            }
-        }
-
-        function movePaddle() {
-            if (rightPressed && paddleX < canvas.width - paddleWidth) {
-                paddleX += 7;
-            } else if (leftPressed && paddleX > 0) {
-                paddleX -= 7;
-            }
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBall();
-            drawPaddle();
-            collisionDetection();
-            movePaddle();
-
-            x += dx * speed;
-            y += dy * speed;
-
-            requestAnimationFrame(draw);
-        }
-
-        draw();
-    </script>
+    // Start the game loop
+    draw();
+  </script>
 </body>
 </html>
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ping Pong</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .game-container {
+      border: 3px solid #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    canvas {
+      background-color: #000;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <canvas id="pingpong" width="800" height="400"></canvas>
+  </div>
+  <script>
+    const canvas = document.getElementById("pingpong");
+    const ctx = canvas.getContext("2d");
+
+    let ballRadius = 10;
+    let speed = 1;
+    const originalPaddleWidth = 75;
+    let paddleHeight = 10;
+    let paddleWidth = originalPaddleWidth;
+    let paddleX = (canvas.width - paddleWidth) / 2;
+    let aiPaddleX = (canvas.width - paddleWidth) / 2;
+    let rightPressed = false;
+    let leftPressed = false;
+    let score = 0;
+    let level = 1;
+    let lives = 3;
+    let powerUp = null;
+    let balls = [];
+    let obstacles = [
+      { x: 100, y: 100, width: 20, height: 100 },
+      { x: 680, y: 100, width: 20, height: 100 }
+    ];
+    let gameState = 'menu';
+
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+
+    function keyDownHandler(e) {
+      if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
+      else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
+      else if (e.key.toLowerCase() === "p") {
+        if (gameState === 'playing') gameState = 'paused';
+        else if (gameState === 'paused') gameState = 'playing';
+      }
+    }
+
+    function keyUpHandler(e) {
+      if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
+      else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
+    }
+
+    function handleTouch(e) {
+      e.preventDefault();
+      if (e.touches.length) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        let touchX = touch.clientX - rect.left;
+        paddleX = touchX - paddleWidth / 2;
+        if (paddleX < 0) paddleX = 0;
+        if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
+      }
+    }
+    canvas.addEventListener("touchstart", handleTouch, { passive: false });
+    canvas.addEventListener("touchmove", handleTouch, { passive: false });
+
+    canvas.addEventListener("click", () => {
+      if (gameState === 'menu' || gameState === 'gameover') restartGame();
+    });
+
+    function drawBackground() {
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, "#333");
+      gradient.addColorStop(1, "#000");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawBall(x, y) {
+      ctx.save();
+      ctx.beginPath();
+      const ballGradient = ctx.createRadialGradient(x, y, ballRadius * 0.2, x, y, ballRadius);
+      ballGradient.addColorStop(0, "#fff");
+      ballGradient.addColorStop(1, "#ff0");
+      ctx.fillStyle = ballGradient;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+      ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    function drawPaddle(x, y, width, height) {
+      ctx.save();
+      ctx.beginPath();
+      let paddleGradient = ctx.createLinearGradient(x, y, x + width, y);
+      if (y === 0) { // AI paddle
+        paddleGradient.addColorStop(0, "#f00");
+        paddleGradient.addColorStop(1, "#a00");
+      } else { // Player paddle
+        paddleGradient.addColorStop(0, "#00f");
+        paddleGradient.addColorStop(1, "#006");
+      }
+      ctx.fillStyle = paddleGradient;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+      ctx.fillRect(x, y, width, height);
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    function drawScore() {
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "#fff";
+      ctx.fillText("Score: " + score + " Level: " + level + " Lives: " + lives, 8, 20);
+    }
+
+    function collisionDetection(ball) {
+      if (ball.x + ball.dx > canvas.width - ballRadius || ball.x + ball.dx < ballRadius) {
+        ball.dx = -ball.dx;
+      }
+
+      if (ball.y + ball.dy < 0) {
+        if (ball.x > aiPaddleX && ball.x < aiPaddleX + paddleWidth) {
+          ball.dy = -ball.dy;
+          ball.y = ballRadius;
+        } else {
+          score++;
+          if (score % 10 === 0) {
+            level += 1;
+            speed *= 1.1;
+          }
+          ball.x = canvas.width / 2;
+          ball.y = canvas.height - 50;
+          ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+          ball.dy = -4;
+          ball.trail = [];
+        }
+      }
+      else if (ball.y + ball.dy > canvas.height) {
+        if (ball.x > paddleX && ball.x < paddleX + paddleWidth) {
+          ball.dy = -ball.dy;
+          ball.y = canvas.height - ballRadius;
+          speed += 0.05;
+        } else {
+          lives--;
+          if (lives > 0) {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height - 50;
+            ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+            ball.dy = -4;
+            ball.trail = [];
+          } else {
+            ball.remove = true;
+          }
+        }
+      }
+
+      obstacles.forEach(obstacle => {
+        let left = obstacle.x;
+        let right = obstacle.x + obstacle.width;
+        let top = obstacle.y;
+        let bottom = obstacle.y + obstacle.height;
+        if (ball.x + ballRadius > left && ball.x - ballRadius < right && ball.y + ballRadius > top && ball.y - ballRadius < bottom) {
+          let distLeft = ball.x - left;
+          let distRight = right - ball.x;
+          let distTop = ball.y - top;
+          let distBottom = bottom - ball.y;
+          let minDist = Math.min(distLeft, distRight, distTop, distBottom);
+          if (minDist === distLeft || minDist === distRight) ball.dx = -ball.dx;
+          else ball.dy = -ball.dy;
+        }
+      });
+    }
+
+    function movePaddle() {
+      if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 7;
+      else if (leftPressed && paddleX > 0) paddleX -= 7;
+    }
+
+    function moveAIPaddle() {
+      if (balls.length > 0) {
+        let ball = balls[0];
+        if (ball.dy < 0) {
+          let vy = ball.dy * speed;
+          let t = (ballRadius - ball.y) / vy;
+          if (t > 0) {
+            let vx = ball.dx * speed;
+            let x_pred = ball.x + t * vx;
+            if (x_pred < 0) x_pred = -x_pred;
+            else if (x_pred > canvas.width) x_pred = 2 * canvas.width - x_pred;
+            let targetX = x_pred - paddleWidth / 2;
+            if (targetX < 0) targetX = 0;
+            if (targetX > canvas.width - paddleWidth) targetX = canvas.width - paddleWidth;
+            let aiSpeed = 3 + level * 0.5;
+            if (aiPaddleX < targetX) {
+              aiPaddleX += aiSpeed;
+              if (aiPaddleX > targetX) aiPaddleX = targetX;
+            } else if (aiPaddleX > targetX) {
+              aiPaddleX -= aiSpeed;
+              if (aiPaddleX < targetX) aiPaddleX = targetX;
+            }
+          }
+        } else {
+          let centerX = canvas.width / 2 - paddleWidth / 2;
+          let aiSpeed = 3 + level * 0.5;
+          if (aiPaddleX < centerX) {
+            aiPaddleX += aiSpeed;
+            if (aiPaddleX > centerX) aiPaddleX = centerX;
+          } else if (aiPaddleX > centerX) {
+            aiPaddleX -= aiSpeed;
+            if (aiPaddleX < centerX) aiPaddleX = centerX;
+          }
+        }
+        if (aiPaddleX < 0) aiPaddleX = 0;
+        if (aiPaddleX + paddleWidth > canvas.width) aiPaddleX = canvas.width - paddleWidth;
+      }
+    }
+
+    function spawnPowerUp() {
+      let types = ['enlarge', 'speedUp', 'multiBall'];
+      powerUp = {
+        x: Math.random() * (canvas.width - 20) + 10,
+        y: 0,
+        radius: 8,
+        dy: 2,
+        type: types[Math.floor(Math.random() * types.length)]
+      };
+    }
+
+    function drawPowerUp() {
+      ctx.save();
+      ctx.beginPath();
+      if (powerUp.type === 'enlarge') {
+        ctx.fillStyle = "lime";
+        ctx.shadowColor = "lime";
+      } else if (powerUp.type === 'speedUp') {
+        ctx.fillStyle = "red";
+        ctx.shadowColor = "red";
+      } else if (powerUp.type === 'multiBall') {
+        ctx.fillStyle = "yellow";
+        ctx.shadowColor = "yellow";
+      }
+      ctx.shadowBlur = 10;
+      ctx.arc(powerUp.x, powerUp.y, powerUp.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    function drawMenu() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "48px Arial";
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.shadowColor = "black";
+      ctx.shadowBlur = 4;
+      ctx.fillText("Ping Pong Game", canvas.width / 2, canvas.height / 2 - 60);
+      ctx.font = "24px Arial";
+      ctx.fillText("Tap or Click to Start", canvas.width / 2, canvas.height / 2);
+      ctx.fillText("Use Arrow keys or touch to move", canvas.width / 2, canvas.height / 2 + 40);
+      ctx.fillText("Press 'P' to Pause", canvas.width / 2, canvas.height / 2 + 80);
+      ctx.shadowBlur = 0;
+    }
+
+    function drawPauseOverlay() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "48px Arial";
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.shadowColor = "black";
+      ctx.shadowBlur = 4;
+      ctx.fillText("Paused", canvas.width / 2, canvas.height / 2);
+      ctx.shadowBlur = 0;
+    }
+
+    function drawGameOver() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "48px Arial";
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.shadowColor = "black";
+      ctx.shadowBlur = 4;
+      ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
+      ctx.font = "24px Arial";
+      ctx.fillText("Tap or Click to Restart", canvas.width / 2, canvas.height / 2 + 40);
+      ctx.shadowBlur = 0;
+    }
+
+    function restartGame() {
+      gameState = 'playing';
+      balls = [{
+        x: canvas.width / 2,
+        y: canvas.height - 50,
+        dx: 4,
+        dy: -4,
+        remove: false,
+        trail: []
+      }];
+      speed = 1;
+      paddleWidth = originalPaddleWidth;
+      paddleX = (canvas.width - paddleWidth) / 2;
+      aiPaddleX = (canvas.width - paddleWidth) / 2;
+      score = 0;
+      level = 1;
+      lives = 3;
+      powerUp = null;
+    }
+
+    function draw() {
+      drawBackground();
+
+      if (gameState === 'menu') {
+        drawMenu();
+      } else if (gameState === 'playing') {
+        drawPaddle(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+        drawPaddle(aiPaddleX, 0, paddleWidth, paddleHeight);
+
+        obstacles.forEach(obstacle => {
+          ctx.fillStyle = "#555";
+          ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        });
+
+        balls.forEach(ball => {
+          ball.trail.forEach((pos, index) => {
+            let alpha = (index + 1) / ball.trail.length;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, ballRadius * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 0, ${alpha * 0.5})`;
+            ctx.fill();
+            ctx.closePath();
+          });
+          ball.trail.push({x: ball.x, y: ball.y});
+          if (ball.trail.length > 10) ball.trail.shift();
+          drawBall(ball.x, ball.y);
+          ball.x += ball.dx * speed;
+          ball.y += ball.dy * speed;
+          collisionDetection(ball);
+        });
+
+        balls = balls.filter(ball => !ball.remove);
+        if (balls.length === 0 && lives <= 0) gameState = 'gameover';
+
+        movePaddle();
+        moveAIPaddle();
+        drawScore();
+
+        if (!powerUp && Math.random() < 0.002) spawnPowerUp();
+        if (powerUp) {
+          powerUp.y += powerUp.dy;
+          if (powerUp.y - powerUp.radius > canvas.height) {
+            powerUp = null;
+          } else {
+            drawPowerUp();
+            if (
+              powerUp.y + powerUp.radius >= canvas.height - paddleHeight &&
+              powerUp.x > paddleX &&
+              powerUp.x < paddleX + paddleWidth
+            ) {
+              if (powerUp.type === 'enlarge') {
+                paddleWidth = 150;
+                setTimeout(() => { paddleWidth = originalPaddleWidth; }, 5000);
+              } else if (powerUp.type === 'speedUp') {
+                speed *= 1.5;
+                setTimeout(() => { speed /= 1.5; }, 5000);
+              } else if (powerUp.type === 'multiBall') {
+                let newBall = {
+                  x: paddleX + paddleWidth / 2,
+                  y: canvas.height - paddleHeight - ballRadius,
+                  dx: 4 * (Math.random() > 0.5 ? 1 : -1),
+                  dy: -4,
+                  remove: false,
+                  trail: []
+                };
+                balls.push(newBall);
+              }
+              powerUp = null;
+            }
+          }
+        }
+      } else if (gameState === 'paused') {
+        balls.forEach(ball => {
+          ball.trail.forEach((pos, index) => {
+            let alpha = (index + 1) / ball.trail.length;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, ballRadius * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 0, ${alpha * 0.5})`;
+            ctx.fill();
+            ctx.closePath();
+          });
+          drawBall(ball.x, ball.y);
+        });
+        drawPaddle(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+        drawPaddle(aiPaddleX, 0, paddleWidth, paddleHeight);
+        obstacles.forEach(obstacle => {
+          ctx.fillStyle = "#555";
+          ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        });
+        if (powerUp) drawPowerUp();
+        drawScore();
+        drawPauseOverlay();
+      } else if (gameState === 'gameover') {
+        balls.forEach(ball => {
+          ball.trail.forEach((pos, index) => {
+            let alpha = (index + 1) / ball.trail.length;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, ballRadius * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 0, ${alpha * 0.5})`;
+            ctx.fill();
+            ctx.closePath();
+          });
+          drawBall(ball.x, ball.y);
+        });
+        drawPaddle(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+        drawPaddle(aiPaddleX, 0, paddleWidth, paddleHeight);
+        obstacles.forEach(obstacle => {
+          ctx.fillStyle = "#555";
+          ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        });
+        if (powerUp) drawPowerUp();
+        drawScore();
+        drawGameOver();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
+</body>
+</html> -->
