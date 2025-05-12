@@ -47,13 +47,36 @@
       justify-content: space-between;
       align-items: center;
     }
+    .pdf-viewer-container {
+      position: relative;
+      margin-top: 20px;
+      display: none;
+    }
     .pdf-viewer {
       width: 100%;
       height: 600px;
       border: none;
       border-radius: 8px;
-      margin-top: 20px;
-      display: none;
+    }
+    .viewer-close {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #C4A484;
+      color: #fff;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s ease;
+    }
+    .viewer-close:hover {
+      background: #b38d78;
     }
     .btn-view {
       background-color: #C4A484;
@@ -141,7 +164,8 @@
     </div>
 
     <!-- PDF Viewer -->
-    <div id="pdfViewerContainer">
+    <div class="pdf-viewer-container" id="pdfViewerContainer">
+      <button class="viewer-close" onclick="closeViewer()"><i class="fas fa-times"></i></button>
       <embed id="pdfViewer" class="pdf-viewer" type="application/pdf">
     </div>
 
@@ -174,10 +198,18 @@
     }
 
     function viewPDF(path) {
+      const container = document.getElementById('pdfViewerContainer');
       const viewer = document.getElementById('pdfViewer');
       viewer.src = path;
-      viewer.style.display = 'block';
-      window.scrollTo({ top: viewer.offsetTop, behavior: 'smooth' });
+      container.style.display = 'block';
+      window.scrollTo({ top: container.offsetTop, behavior: 'smooth' });
+    }
+
+    function closeViewer() {
+      const container = document.getElementById('pdfViewerContainer');
+      const viewer = document.getElementById('pdfViewer');
+      viewer.src = '';
+      container.style.display = 'none';
     }
 
     function addComment(event) {
