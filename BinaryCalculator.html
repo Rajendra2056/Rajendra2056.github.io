@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Binary Arithmetic Visualizer</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 700px;
+    margin: auto;
+    padding: 20px;
+    background: #fafafa;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #222;
+  }
+  label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: 600;
+  }
+  input, select {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+  }
+  button {
+    margin-top: 15px;
+    padding: 12px 20px;
+    font-weight: 700;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: #0077ff;
+    color: white;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #005fcc;
+  }
+
+  .visual-steps {
+    margin-top: 20px;
+    background: #eef6ff;
+    border-radius: 12px;
+    padding: 15px;
+    min-height: 100px;
+  }
+
+  .bit-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .bit-box {
+    width: 32px;
+    height: 32px;
+    margin: 0 4px;
+    line-height: 32px;
+    text-align: center;
+    font-weight: 700;
+    font-family: monospace;
+    border-radius: 6px;
+    border: 2px solid #0077ff;
+    background-color: #d0e4ff;
+    color: #004a99;
+    user-select: none;
+    position: relative;
+  }
+  .arrow {
+    position: relative;
+    margin: 0 6px;
+  }
+  .arrow::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    border: 8px solid transparent;
+    border-left-color: #0077ff;
+    transform: translateY(-50%);
+  }
+
+  .carry {
+    background-color: #ffd1d1;
+    border-color: #ff3b3b;
+    color: #a10000;
+  }
+  .borrow {
+    background-color: #fff0b3;
+    border-color: #d1ad00;
+    color: #996c00;
+  }
+  .result-bit {
+    background-color: #d1ffd1;
+    border-color: #3bff3b;
+    color: #007a00;
+  }
+
+  .step-label {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  #resultOutput {
+    margin-top: 20px;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    font-family: monospace;
+    color: #0077ff;
+  }
+</style>
+</head>
+<body>
+
+<h1>Binary Arithmetic Visualizer</h1>
+
+<label for="bin1">First binary number:</label>
+<input type="text" id="bin1" placeholder="e.g. 1011" />
+
+<label for="bin2">Second binary number:</label>
+<input type="text" id="bin2" placeholder="e.g. 1101" />
+
+<label for="operation">Select operation:</label>
+<select id="operation">
+  <option value="add">Add (+)</option>
+  <option value="subtract">Subtract (-)</option>
+  <option value="multiply">Multiply (×)</option>
+  <option value="divide">Divide (÷)</option>
+</select>
+
+<button onclick="performOperation()">Calculate</button>
+
+<div class="visual-steps" id="stepsContainer" style="display:none;"></div>
+<div id="resultOutput"></div>
+
+<script>
+  function validateBinary(str) {
+    return /^[01]+$/.test(str);
+  }
+
+  function padLeft(str, length, padChar = '0') {
+    return str.length >= length ? str : padChar.repeat(length - str.length) + str;
+  }
+
+  // Create a bit row with optional classes for carry/borrow/result bits
+  function createBitRow(bits, label, type = '') {
+    const container = document.createElement('div');
+
+    const lbl = document.createElement('div');
+    lbl.className = 'step-label';
+    lbl.textContent = label;
+    container.appendChild(lbl);
+
+    const row = document.createElement('div');
+    row.className = 'bit-row';
+
+    bits.forEach((bit, i) => {
+      const box = document.createElement('div');
+      box.className = 'bit-box';
+      box.textContent = bit;
+      if (type === 'carry') box.classList.add('carry');
+      if (type === 'borrow') box.classList.add('borrow');
+      if (type === 'result') box.classList.add('result-bit');
+      row.appendChild(box);
+      if (i < bits.length -1) {
+        const arrow = document.createElement('div');
+        arrow.className = 'arrow';
+        row.appendChild(arrow);
+      }
+    });
+
+    container.appendChild(row);
+    return container;
+  }
+
+  function performOperation() {
+    const bin1 = document.getElementById('bin1').value.trim();
+    const bin2 = document.getElementById('bin2').value.trim();
+    const op = document.getElementById('operation').value;
+    const stepsDiv = document.getElementById('stepsContainer');
+    const resultDiv = document.getElementById('resultOutput');
+    stepsDiv.innerHTML = '';
+    stepsDiv.style.display = 'none';
+    resultDiv.textContent = '';
+
+    if (!validateBinary(bin1) || !validateBinary(bin2)) {
+      alert('Please enter valid binary numbers (only 0 and 1).');
+      return;
+    }
+
+    // Pad both numbers to equal length
+    const maxLen = Math.max(bin1.length, bin2.length);
+    const a = padLeft(bin1, maxLen);
+    const b = padLeft(bin2, maxLen);
+
+    if(op === 'add') {
+      binaryAdd(a, b, stepsDiv, resultDiv);
+    } else if(op === 'subtract') {
+      binarySubtract(a, b, stepsDiv, resultDiv);
+    } else if(op === 'multiply') {
+      binaryMultiply(bin1, bin2, stepsDiv, resultDiv);
+    } else if(op === 'divide') {
+      binaryDivide(bin1, bin2, stepsDiv, resultDiv);
+    }
+  }
+
+  // Binary Addition
+  function binaryAdd(a, b, stepsDiv, resultDiv) {
+    let carry = 0;
+    let sumBits = [];
+    let carryBits = [];
+
+    for(let i = a.length -1; i >= 0; i--) {
+      const bitA = parseInt(a[i]);
+      const bitB = parseInt(b[i]);
+      const total = bitA + bitB + carry;
+      const sum = total % 2;
+      carry = Math.floor(total / 2);
+      sumBits.unshift(sum);
+      carryBits.unshift(carry);
+    }
+    if (carry === 1) {
+      sumBits.unshift(1);
+      carryBits.unshift(0);
+    } else {
+      carryBits.unshift(0);
+    }
+
+    stepsDiv.appendChild(createBitRow(carryBits.map(String), 'Carry Bits', 'carry'));
+    stepsDiv.appendChild(createBitRow(a.split(''), 'First Number'));
+    stepsDiv.appendChild(createBitRow(b.split(''), 'Second Number'));
+    stepsDiv.appendChild(createBitRow(sumBits.map(String), 'Sum (Result)', 'result'));
+    stepsDiv.style.display = 'block';
+    resultDiv.textContent = `Result (Binary): ${sumBits.join('')}`;
+  }
+
+  // Binary Subtraction (a - b)
+  // Using borrow method, assumes a >= b, else shows error
+  function binarySubtract(a, b, stepsDiv, resultDiv) {
+    if (parseInt(a, 2) < parseInt(b, 2)) {
+      alert("Subtraction error: First number must be greater than or equal to second number.");
+      return;
+    }
+
+    let borrow = 0;
+    let diffBits = [];
+    let borrowBits = [];
+
+    for(let i = a.length -1; i >= 0; i--) {
+      let bitA = parseInt(a[i]);
+      let bitB = parseInt(b[i]) + borrow;
+
+      if(bitA < bitB) {
+        bitA += 2; // borrow from next bit
+        borrow = 1;
+      } else {
+        borrow = 0;
+      }
+      borrowBits.unshift(borrow);
+      diffBits.unshift(bitA - bitB);
+    }
+
+    // Last borrow bit doesn't matter here, so prepend 0 to align
+    borrowBits.unshift(0);
+
+    stepsDiv.appendChild(createBitRow(borrowBits.map(String), 'Borrow Bits', 'borrow'));
+    stepsDiv.appendChild(createBitRow(a.split(''), 'Minuend (First Number)'));
+    stepsDiv.appendChild(createBitRow(b.split(''), 'Subtrahend (Second Number)'));
+    stepsDiv.appendChild(createBitRow(diffBits.map(String), 'Difference (Result)', 'result'));
+    stepsDiv.style.display = 'block';
+    resultDiv.textContent = `Result (Binary): ${diffBits.join('')}`;
+  }
+
+  // Binary Multiplication
+  // Standard shift and add method with visuals for each partial product
+  function binaryMultiply(bin1, bin2, stepsDiv, resultDiv) {
+    let multiplicand = bin1;
+    let multiplier = bin2;
+    const n = multiplier.length;
+
+    let partials = [];
+    let partialValues = [];
+    for(let i = n - 1; i >= 0; i--) {
+      if(multiplier[i] === '1') {
+        let shifted = multiplicand + '0'.repeat(n - 1 - i);
+        partials.push(shifted);
+        partialValues.push(parseInt(shifted, 2));
+      } else {
+        let zeros = '0'.repeat(multiplicand.length + (n - 1 - i));
+        partials.push(zeros);
+        partialValues.push(0);
+      }
+    }
+
+    // Show partial products visually
+    partials.forEach((part, idx) => {
+      stepsDiv.appendChild(createBitRow(padLeft(part, Math.max(...partials.map(p=>p.length))).split(''), `Partial Product ${idx+1}`));
+    });
+
+    // Sum all partial products (decimal)
+    let sumDecimal = partialValues.reduce((a,b) => a+b, 0);
+    let sumBinary = sumDecimal.toString(2);
+
+    stepsDiv.appendChild(createBitRow(sumBinary.split(''), 'Final Product (Sum)', 'result'));
+    stepsDiv.style.display = 'block';
+    resultDiv.textContent = `Result (Binary): ${sumBinary}`;
+  }
+
+  // Binary Division (bin1 ÷ bin2)
+  // Uses repeated subtraction method and shows quotient and remainder
+  function binaryDivide(dividend, divisor, stepsDiv, resultDiv) {
+    let dividendDec = parseInt(dividend, 2);
+    let divisorDec = parseInt(divisor, 2);
+
+    if(divisorDec === 0) {
+      alert('Division error: divisor cannot be zero.');
+      return;
+    }
+    if(dividendDec < divisorDec) {
+      stepsDiv.appendChild(createBitRow(dividend.split(''), 'Dividend'));
+      stepsDiv.appendChild(createBitRow(divisor.split(''), 'Divisor'));
+      stepsDiv.style.display = 'block';
+      resultDiv.textContent = `Quotient: 0, Remainder: ${dividend}`;
+      return;
+    }
+
+    let quotientDec = 0;
+    let remainderDec = dividendDec;
+
+    let stepCount = 0;
+    while (remainderDec >= divisorDec) {
+      remainderDec -= divisorDec;
+      quotientDec++;
+      stepCount++;
+      stepsDiv.appendChild(document.createElement('hr'));
+      stepsDiv.appendChild(createBitRow(
+        padLeft((remainderDec).toString(2), dividend.length).split(''),
+        `Step ${stepCount} - Remainder after subtracting divisor`
+      ));
+    }
+
+    stepsDiv.appendChild(createBitRow(dividend.split(''), 'Dividend'));
+    stepsDiv.appendChild(createBitRow(divisor.split(''), 'Divisor'));
+    stepsDiv.style.display = 'block';
+
+    resultDiv.textContent = `Quotient (Binary): ${quotientDec.toString(2)} | Remainder (Binary): ${remainderDec.toString(2)}`;
+  }
+
+</script>
+
+</body>
+</html>
